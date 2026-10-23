@@ -32,14 +32,14 @@ python -m http.server 8000
 
 Репозиторий: <https://github.com/Bell-igor/-x->
 
-1. Откройте **Settings → Pages**.
-2. В разделе **Build and deployment** выберите **Deploy from a branch**.
-3. Укажите ветку `main` и папку `/ (root)`.
-4. Нажмите **Save**.
+Публикация настроена через GitHub Actions. При каждом пуше в `main` workflow
+[`pages.yml`](.github/workflows/pages.yml) собирает статическую папку `_site` и выкладывает её на GitHub Pages.
 
-Через минуту игра будет доступна по адресу:
+Готовая игра:
 
 <https://bell-igor.github.io/-x-/>
+
+Прогресс публикации можно смотреть во вкладке **Actions** репозитория. Если Pages нужно настроить вручную, выберите в **Settings → Pages** источник **GitHub Actions**.
 
 ## Структура
 
@@ -48,6 +48,9 @@ python -m http.server 8000
 ├── index.html          # разметка и SVG-иконки
 ├── style.css           # оформление, адаптив, анимации
 ├── game.js             # игровой цикл, физика, звук, рекорды
+├── .github/
+│   └── workflows/
+│       └── pages.yml   # публикация на GitHub Pages
 └── assets/
     ├── hero.png        # спрайт демоницы с прозрачным фоном
     ├── favicon.svg
