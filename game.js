@@ -25,13 +25,104 @@
   const toastTextEl = $("toastText");
   const soundBtn = $("soundBtn");
   const soundIcon = $("soundIcon");
+  const profileScreen = $("profileScreen");
+  const profileBtn = $("profileBtn");
+  const profileClose = $("profileClose");
+  const profileBack = $("profileBack");
+  const achList = $("achList");
+  const achCount = $("achCount");
+  const achPillCount = $("achPillCount");
+  const achToast = $("achToast");
+  const achToastTitle = $("achToastTitle");
+  const achToastDesc = $("achToastDesc");
+  const buffStar = $("buffStar");
+  const buffBrush = $("buffBrush");
+  const buffStarTime = $("buffStarTime");
+  const buffBrushTime = $("buffBrushTime");
 
   const TAU = Math.PI * 2;
   const STORE_BEST = "dushelovka.best.v1";
   const STORE_SOUND = "dushelovka.sound.v1";
+  const STORE_ACHIEVEMENTS = "dushelovka.achievements.v1";
   const WAVE_LENGTH = 24;
   const MAX_LIVES = 3;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const ACHIEVEMENTS = [
+    {
+      id: "first_soul",
+      title: "Первый лисёнок",
+      desc: "Поймать первую душу.",
+      icon: "#i-soul",
+    },
+    {
+      id: "combo3",
+      title: "Лисий хвост",
+      desc: "Дойти до множителя ×3.",
+      icon: "#i-star",
+    },
+    {
+      id: "combo5",
+      title: "Тайлорн",
+      desc: "Дойти до множителя ×5.",
+      icon: "#i-fox",
+    },
+    {
+      id: "score500",
+      title: "Виджитаун",
+      desc: "Набрать 500 очков за забег.",
+      icon: "#i-trophy",
+    },
+    {
+      id: "score1500",
+      title: "Душеловка",
+      desc: "Набрать 1500 очков за забег.",
+      icon: "#i-trophy",
+    },
+    {
+      id: "survive60",
+      title: "Между стримами",
+      desc: "Продержаться 60 секунд.",
+      icon: "#i-star",
+    },
+    {
+      id: "flawless45",
+      title: "Ни царапины",
+      desc: "45 секунд без потери сердец.",
+      icon: "#i-heart",
+    },
+    {
+      id: "star",
+      title: "Звёздный топ",
+      desc: "Поймать звезду.",
+      icon: "#i-star",
+    },
+    {
+      id: "brush",
+      title: "Вдохновение",
+      desc: "Поймать кисть.",
+      icon: "#i-brush",
+    },
+    {
+      id: "dodger",
+      title: "Хитрый лис",
+      desc: "Уклониться от 12 ловушек за забег.",
+      icon: "#i-bomb",
+    },
+    {
+      id: "heartsave",
+      title: "Второй шанс",
+      desc: "Вылечиться на последнем сердце.",
+      icon: "#i-heart",
+    },
+    {
+      id: "collector",
+      title: "Коллекционер",
+      desc: "Поймать 50 душ за забег.",
+      icon: "#i-soul",
+    },
+  ];
+  const ACHIEVEMENT_MAP = new Map(ACHIEVEMENTS.map((achievement) => [achievement.id, achievement]));
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const rand = (min, max) => min + Math.random() * (max - min);
@@ -51,6 +142,16 @@
       window.localStorage.setItem(key, String(value));
     } catch {
       /* Storage can be disabled — the game still works. */
+    }
+  }
+
+  function loadAchievements() {
+    try {
+      const parsed = JSON.parse(readStore(STORE_ACHIEVEMENTS, "[]"));
+      if (!Array.isArray(parsed)) return new Set();
+      return new Set(parsed.filter((id) => ACHIEVEMENT_MAP.has(id)));
+    } catch {
+      return new Set();
     }
   }
 
@@ -137,6 +238,35 @@
       this.noise(0.23, 0.09);
     }
 
+    bomb() {
+      this.tone(105, 34, 0.38, "sawtooth", 0.05);
+      this.noise(0.3, 0.11);
+    }
+
+    bone() {
+      this.tone(420, 150, 0.11, "square", 0.025);
+      this.tone(260, 120, 0.12, "square", 0.02, 0.05);
+    }
+
+    star() {
+      this.tone(660, 660, 0.1, "sine", 0.04);
+      this.tone(880, 880, 0.1, "sine", 0.04, 0.07);
+      this.tone(1320, 1500, 0.2, "sine", 0.03, 0.14);
+    }
+
+    brush() {
+      this.tone(330, 440, 0.14, "triangle", 0.03);
+      this.tone(440, 660, 0.18, "triangle", 0.03, 0.1);
+      this.noise(0.1, 0.025);
+    }
+
+    achievement() {
+      this.tone(523, 523, 0.11, "sine", 0.032);
+      this.tone(659, 659, 0.11, "sine", 0.032, 0.08);
+      this.tone(784, 784, 0.11, "sine", 0.032, 0.16);
+      this.tone(1046, 1180, 0.25, "sine", 0.028, 0.24);
+    }
+
     wave() {
       this.tone(170, 255, 0.28, "square", 0.022);
       this.tone(255, 340, 0.24, "triangle", 0.022, 0.08);
@@ -172,16 +302,23 @@
     score: 0,
     shownScore: 0,
     lives: MAX_LIVES,
+    livesLost: 0,
     combo: 0,
     lastMult: 1,
     wave: 1,
     elapsed: 0,
     waveTime: 0,
     spawnTimer: 0.6,
-    heartTimer: 14,
+    heartTimer: 13,
+    bonusTimer: 10,
+    soulsCaught: 0,
+    trapsDodged: 0,
+    starTime: 0,
+    brushTime: 0,
     invuln: 0,
     shake: 0,
     flash: 0,
+    trapFlash: 0,
   };
 
   let mode = "menu";
@@ -196,20 +333,28 @@
   let overTimeout = null;
   let toastTimeout = null;
   let lastPaintedScore = -1;
+  let profileReturnFocus = null;
+  let achQueue = [];
+  let achToastTimer = null;
+  let achToastBusy = false;
   let best = Math.max(0, Math.floor(Number(readStore(STORE_BEST, "0")) || 0));
+  const unlockedAchievements = loadAchievements();
 
   const keys = { left: false, right: false };
   const heartEls = [];
 
   const heroImg = new Image();
   heroImg.decoding = "async";
-  heroImg.src = "assets/hero.png";
   heroImg.addEventListener("load", () => {
     heroReady = true;
   });
   heroImg.addEventListener("error", () => {
     heroReady = false;
   });
+  heroImg.src = "assets/hero.png";
+  if (heroImg.complete && heroImg.naturalWidth > 0) {
+    heroReady = true;
+  }
 
   function createSprite(rows, palette, scale = 3) {
     const width = rows[0].length;
@@ -286,6 +431,81 @@
         l: "#ffdce2",
       },
     ),
+    bomb: createSprite(
+      [
+        "....#....",
+        "...#f#...",
+        "..#s#....",
+        ".#OOOOO#.",
+        "#OOllOOO#",
+        "#OOllOOO#",
+        "#OOOOOOO#",
+        ".#OOOOO#.",
+        "..#####..",
+      ],
+      {
+        "#": "#17060b",
+        O: "#2a1822",
+        l: "#583040",
+        f: "#ff7a4d",
+        s: "#ffd166",
+      },
+    ),
+    bone: createSprite(
+      [
+        "##.......##",
+        "#W#.....#W#",
+        ".#WWWWWWW#.",
+        "..#WWWWW#..",
+        ".#WWWWWWW#.",
+        "#W#.....#W#",
+        "##.......##",
+      ],
+      {
+        "#": "#2a0c14",
+        W: "#ffe3d4",
+      },
+    ),
+    star: createSprite(
+      [
+        "....#....",
+        "...#O#...",
+        "...#O#...",
+        ".##OOO##.",
+        "#OOOlOOO#",
+        ".##OOO##.",
+        "...#O#...",
+        "...#O#...",
+        "....#....",
+      ],
+      {
+        "#": "#3a2105",
+        O: "#ffc94f",
+        l: "#fff3c4",
+      },
+    ),
+    brush: createSprite(
+      [
+        "...###..",
+        "..#OOO#.",
+        "..#OOO#.",
+        "..#OOO#.",
+        "...#b#..",
+        "...#b#..",
+        "...#b#..",
+        "...#b#..",
+        "...#b#..",
+        "..##b##.",
+        "..#WWW#.",
+        "...###..",
+      ],
+      {
+        "#": "#1b060d",
+        O: "#d92a3c",
+        b: "#d39a6a",
+        W: "#67f4ff",
+      },
+    ),
   };
 
   function buildLives() {
@@ -328,6 +548,100 @@
   function updateBestLabels() {
     bestStartEl.textContent = formatScore(best);
     bestOverEl.textContent = formatScore(best);
+  }
+
+  function updateAchCounters() {
+    const short = `${unlockedAchievements.size}/${ACHIEVEMENTS.length}`;
+    achPillCount.textContent = short;
+    achCount.textContent = `${unlockedAchievements.size} / ${ACHIEVEMENTS.length}`;
+  }
+
+  function renderAchievements() {
+    const fragment = document.createDocumentFragment();
+    ACHIEVEMENTS.forEach((achievement) => {
+      const unlocked = unlockedAchievements.has(achievement.id);
+      const item = document.createElement("li");
+      item.className = `ach-item ${unlocked ? "is-unlocked" : "is-locked"}`;
+
+      const icon = document.createElement("span");
+      icon.className = "ach-icon";
+      icon.innerHTML = `<svg viewBox="0 0 20 20" aria-hidden="true"><use href="${achievement.icon}"></use></svg>`;
+
+      const copy = document.createElement("span");
+      copy.className = "ach-copy";
+      const title = document.createElement("b");
+      title.textContent = achievement.title;
+      const desc = document.createElement("span");
+      desc.textContent = achievement.desc;
+      copy.append(title, desc);
+      item.append(icon, copy);
+      fragment.append(item);
+    });
+    achList.replaceChildren(fragment);
+  }
+
+  function showNextAchievementToast() {
+    if (achQueue.length === 0) {
+      achToastBusy = false;
+      return;
+    }
+    achToastBusy = true;
+    const achievement = achQueue.shift();
+    achToastTitle.textContent = achievement.title;
+    achToastDesc.textContent = achievement.desc;
+    achToast.classList.add("is-visible");
+    sfx.achievement();
+    window.clearTimeout(achToastTimer);
+    achToastTimer = window.setTimeout(() => {
+      achToast.classList.remove("is-visible");
+      achToastTimer = window.setTimeout(showNextAchievementToast, 260);
+    }, 2600);
+  }
+
+  function queueAchievementToast(achievement) {
+    achQueue.push(achievement);
+    if (!achToastBusy) showNextAchievementToast();
+  }
+
+  function hideAchievementToast() {
+    achQueue = [];
+    achToastBusy = false;
+    window.clearTimeout(achToastTimer);
+    achToast.classList.remove("is-visible");
+  }
+
+  function unlockAchievement(id) {
+    const achievement = ACHIEVEMENT_MAP.get(id);
+    if (!achievement || unlockedAchievements.has(id)) return;
+    unlockedAchievements.add(id);
+    writeStore(STORE_ACHIEVEMENTS, JSON.stringify([...unlockedAchievements]));
+    updateAchCounters();
+    if (!profileScreen.hidden) renderAchievements();
+    queueAchievementToast(achievement);
+  }
+
+  function checkScoreAchievements() {
+    if (state.score >= 500) unlockAchievement("score500");
+    if (state.score >= 1500) unlockAchievement("score1500");
+  }
+
+  function openProfile() {
+    if (mode === "playing" || mode === "paused") return;
+    hideAchievementToast();
+    profileReturnFocus = document.activeElement;
+    renderAchievements();
+    profileScreen.hidden = false;
+    profileBtn.setAttribute("aria-expanded", "true");
+    profileClose.focus({ preventScroll: true });
+  }
+
+  function closeProfile() {
+    if (profileScreen.hidden) return;
+    profileScreen.hidden = true;
+    profileBtn.setAttribute("aria-expanded", "false");
+    if (profileReturnFocus instanceof HTMLElement) {
+      profileReturnFocus.focus({ preventScroll: true });
+    }
   }
 
   function multiplier() {
@@ -428,6 +742,7 @@
   function startGame() {
     window.clearTimeout(overTimeout);
     overTimeout = null;
+    closeProfile();
     sfx.unlock();
     sfx.start();
 
@@ -435,20 +750,28 @@
     state.score = 0;
     state.shownScore = 0;
     state.lives = MAX_LIVES;
+    state.livesLost = 0;
     state.combo = 0;
     state.lastMult = 1;
     state.wave = 1;
     state.elapsed = 0;
     state.waveTime = 0;
-    state.spawnTimer = 0.6;
-    state.heartTimer = 14;
+    state.spawnTimer = 0.54;
+    state.heartTimer = 13;
+    state.bonusTimer = 10;
+    state.soulsCaught = 0;
+    state.trapsDodged = 0;
+    state.starTime = 0;
+    state.brushTime = 0;
     state.invuln = 0.9;
     state.shake = 0;
     state.flash = 0;
+    state.trapFlash = 0;
     items = [];
     particles = [];
     rings = [];
     floats = [];
+    hideAchievementToast();
     keys.left = false;
     keys.right = false;
     pointerDown = false;
@@ -461,20 +784,23 @@
     paintScore(true);
     paintCombo();
     paintLives();
+    paintBuffs();
     waveEl.textContent = "1";
     updateBestLabels();
+    updateAchCounters();
 
+    gameEl.classList.remove("is-menu", "is-over", "is-paused");
     gameEl.classList.add("is-playing");
-    gameEl.classList.remove("is-paused", "is-over");
     hud.setAttribute("aria-hidden", "false");
     showScreen(null);
     gameEl.focus({ preventScroll: true });
-    showToast("ЛОВИ ДУШИ", "мышью или пальцем");
+    showToast("ЛОВИ ДУШИ", "Виджи вышла на охоту");
   }
 
   function endGame() {
     if (mode !== "playing") return;
     mode = "over";
+    hideAchievementToast();
     const previousBest = best;
     if (state.score > best) {
       best = state.score;
@@ -487,7 +813,7 @@
     newRecordEl.hidden = !isRecord;
     updateBestLabels();
 
-    gameEl.classList.remove("is-playing");
+    gameEl.classList.remove("is-playing", "is-menu");
     gameEl.classList.add("is-over");
     hud.setAttribute("aria-hidden", "true");
     sfx.gameOver();
@@ -503,6 +829,7 @@
   function pauseGame() {
     if (mode !== "playing") return;
     mode = "paused";
+    hideAchievementToast();
     pointerDown = false;
     keys.left = false;
     keys.right = false;
@@ -524,13 +851,20 @@
   function goMenu() {
     window.clearTimeout(overTimeout);
     overTimeout = null;
+    closeProfile();
+    hideAchievementToast();
     mode = "menu";
     state.score = 0;
     state.shownScore = 0;
     state.lives = MAX_LIVES;
+    state.livesLost = 0;
     state.combo = 0;
     state.wave = 1;
     state.invuln = 0;
+    state.starTime = 0;
+    state.brushTime = 0;
+    state.trapsDodged = 0;
+    state.soulsCaught = 0;
     items = [];
     particles = [];
     rings = [];
@@ -545,8 +879,11 @@
     paintScore(true);
     paintCombo();
     paintLives();
+    paintBuffs();
     updateBestLabels();
+    updateAchCounters();
     gameEl.classList.remove("is-playing", "is-paused", "is-over");
+    gameEl.classList.add("is-menu");
     hud.setAttribute("aria-hidden", "true");
     showScreen(startScreen);
     gameEl.focus({ preventScroll: true });
@@ -563,25 +900,39 @@
   }
 
   function waveSpawnInterval() {
-    return Math.max(0.38, 0.9 - (state.wave - 1) * 0.065);
+    return Math.max(0.36, 0.84 - (state.wave - 1) * 0.06);
   }
 
-  function hazardChance() {
-    return Math.min(0.44, 0.2 + (state.wave - 1) * 0.036);
+  function pickFallingType() {
+    const roll = Math.random();
+    const skullChance = Math.min(0.3, 0.16 + (state.wave - 1) * 0.025);
+    if (roll < skullChance) return "skull";
+    if (roll < skullChance + 0.11) return "bomb";
+    if (roll < skullChance + 0.18) return "bone";
+    return "soul";
   }
 
   function spawnItem(forceType) {
     if (mode !== "playing" || view.width < 80) return;
-    let type = forceType;
-    if (!type) {
-      type = Math.random() < hazardChance() ? "skull" : "soul";
-    }
+    const type = forceType || pickFallingType();
     const margin = Math.max(24, view.width * 0.055);
     const baseX = rand(margin, view.width - margin);
-    const speedBase = (118 + state.wave * 13 + state.elapsed * 0.4) * (view.height / 800);
+    const speedBase = (138 + state.wave * 15 + state.elapsed * 0.45) * (view.height / 800);
     let vy = speedBase * rand(0.88, 1.14);
     if (type === "heart") vy *= 0.64;
+    if (type === "star" || type === "brush") vy *= 0.88;
     if (type === "skull") vy *= 1.04;
+    if (type === "bone") vy *= 1.06;
+
+    const scaleByType = {
+      soul: rand(0.92, 1.12),
+      heart: 1.08,
+      star: 1.05,
+      brush: 1,
+      bomb: 1,
+      bone: 1,
+      skull: 1,
+    };
 
     items.push({
       type,
@@ -589,11 +940,11 @@
       x: baseX,
       y: -42,
       vy,
-      sway: type === "skull" ? rand(1, 6) : rand(5, 17),
+      sway: type === "skull" || type === "bomb" || type === "bone" ? rand(1, 6) : rand(5, 17),
       phase: rand(0, TAU),
       t: 0,
       spin: rand(-0.55, 0.55),
-      scale: type === "soul" ? rand(0.92, 1.12) : type === "heart" ? 1.08 : 1,
+      scale: scaleByType[type] || 1,
     });
   }
 
@@ -640,28 +991,45 @@
     });
   }
 
+  function paintBuffs() {
+    const hasStar = state.starTime > 0.05;
+    const hasBrush = state.brushTime > 0.05;
+    buffStar.hidden = !hasStar;
+    buffBrush.hidden = !hasBrush;
+    if (hasStar) buffStarTime.textContent = state.starTime.toFixed(1);
+    if (hasBrush) buffBrushTime.textContent = state.brushTime.toFixed(1);
+  }
+
   function collectItem(item) {
     if (item.type === "soul") {
       const previousMult = state.lastMult;
       state.combo += 1;
+      state.soulsCaught += 1;
       const mult = multiplier();
-      const gain = 10 * mult;
+      const starBoost = state.starTime > 0 ? 2 : 1;
+      const gain = 10 * mult * starBoost;
       state.score += gain;
       paintCombo();
       paintScore();
       burst(item.x, item.y, ["#baffff", "#36e2ff", "#0f9fc1", "#ffffff"], 11, 1);
       addRing(item.x, item.y, "rgba(103,244,255,.7)", 36);
-      addFloat(item.x, item.y - 12, `+${gain}`, "#a9fbff", 13);
+      addFloat(item.x, item.y - 12, `+${gain}`, starBoost > 1 ? "#ffe4a8" : "#a9fbff", 13);
       if (mult > previousMult) {
         addFloat(player.x, view.baseY - view.heroH - 16, `×${mult}`, "#67f4ff", 21);
         addRing(player.x, view.baseY - view.heroH * 0.52, "rgba(103,244,255,.45)", 60);
       }
+      unlockAchievement("first_soul");
+      if (mult >= 3) unlockAchievement("combo3");
+      if (mult >= 5) unlockAchievement("combo5");
+      if (state.soulsCaught >= 50) unlockAchievement("collector");
+      checkScoreAchievements();
       sfx.pickup(state.combo);
       return;
     }
 
     if (item.type === "heart") {
       if (state.lives < MAX_LIVES) {
+        if (state.lives === 1) unlockAchievement("heartsave");
         state.lives += 1;
         paintLives();
         addFloat(item.x, item.y - 12, "+1 ЖИЗНЬ", "#ffd9df", 12);
@@ -671,14 +1039,67 @@
         addFloat(item.x, item.y - 12, "+150", "#ffd9df", 13);
       }
       paintScore();
+      checkScoreAchievements();
       burst(item.x, item.y, ["#ffd9df", "#ff6f88", "#ffe9a8", "#ffffff"], 16, 1.15);
       addRing(item.x, item.y, "rgba(255,215,225,.75)", 52);
       sfx.heal();
+      return;
+    }
+
+    if (item.type === "star") {
+      state.starTime = Math.max(state.starTime, 8);
+      state.score += 25;
+      paintScore();
+      paintBuffs();
+      checkScoreAchievements();
+      unlockAchievement("star");
+      burst(item.x, item.y, ["#fff3c4", "#ffd166", "#ff9b5e", "#ffffff"], 18, 1.2);
+      addRing(item.x, item.y, "rgba(255,209,102,.8)", 55);
+      addFloat(item.x, item.y - 12, "+25 · ×2", "#ffe4a8", 13);
+      showToast("ЗВЕЗДА", "души ×2 на 8 секунд");
+      sfx.star();
+      return;
+    }
+
+    if (item.type === "brush") {
+      state.brushTime = Math.max(state.brushTime, 8);
+      paintBuffs();
+      unlockAchievement("brush");
+      burst(item.x, item.y, ["#a9fbff", "#67f4ff", "#ff6f88", "#ffffff"], 18, 1.2);
+      addRing(item.x, item.y, "rgba(103,244,255,.8)", 55);
+      addFloat(item.x, item.y - 12, "МАГНИТ", "#a9fbff", 12);
+      showToast("ВДОХНОВЕНИЕ", "магнит на 8 секунд");
+      sfx.brush();
+      return;
+    }
+  }
+
+  function hitTrap(item) {
+    const isBomb = item.type === "bomb";
+    const penalty = isBomb ? 75 : 25;
+    state.score = Math.max(0, state.score - penalty);
+    if (isBomb) {
+      state.combo = 0;
+      paintCombo();
+    }
+    paintScore();
+    state.shake = reducedMotion ? 2 : isBomb ? 11 : 5;
+    state.trapFlash = isBomb ? 0.7 : 0.35;
+    addFloat(item.x, item.y - 12, `−${penalty}`, isBomb ? "#ff9b5e" : "#ffd0a6", isBomb ? 17 : 14);
+    if (isBomb) {
+      burst(item.x, item.y, ["#ff7a4d", "#ffd166", "#2a1822", "#17060b"], 24, 1.35);
+      addRing(item.x, item.y, "rgba(255,122,77,.75)", 70);
+      sfx.bomb();
+    } else {
+      burst(item.x, item.y, ["#ffe3d4", "#c08f86", "#2a0c14"], 12, 0.85);
+      addRing(item.x, item.y, "rgba(255,208,166,.55)", 46);
+      sfx.bone();
     }
   }
 
   function hurt(item) {
     state.lives = Math.max(0, state.lives - 1);
+    state.livesLost += 1;
     state.combo = 0;
     paintCombo();
     state.invuln = 1.45;
@@ -707,7 +1128,7 @@
     const half = view.heroW * 0.5;
     const direction = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
     if (direction !== 0) {
-      player.targetX += direction * 720 * dt;
+      player.targetX += direction * 760 * dt;
     }
     player.targetX = clamp(player.targetX, half, view.width - half);
     const previous = player.x;
@@ -725,11 +1146,13 @@
       item.x = item.baseX + Math.sin(item.phase + item.t * (item.type === "skull" ? 1.5 : 2.15)) * item.sway;
       if (item.type === "skull") item.x += Math.sin(t * 2.1 + item.phase) * 1.5;
 
-      if (item.type !== "skull") {
+      if (item.type !== "skull" && item.type !== "bomb" && item.type !== "bone") {
         const dx = player.x - item.x;
+        const magnetRange = view.heroW * (state.brushTime > 0 ? 1.7 : 0.78);
+        const magnetPull = state.brushTime > 0 ? 5.2 : 2.4;
         const catchZoneTop = view.baseY - view.heroH * 1.45;
-        if (item.y > catchZoneTop && item.y < view.baseY - view.heroH * 0.1 && Math.abs(dx) < view.heroW * 0.78) {
-          item.x += dx * Math.min(1, dt * 2.4);
+        if (item.y > catchZoneTop && item.y < view.baseY - view.heroH * 0.1 && Math.abs(dx) < magnetRange) {
+          item.x += dx * Math.min(1, dt * magnetPull);
         }
       }
 
@@ -740,7 +1163,13 @@
           if (mode !== "playing") break;
           continue;
         }
-      } else if (catches(item, 0.52, 0.54)) {
+      } else if (item.type === "bomb" || item.type === "bone") {
+        if (catches(item, 0.46, 0.5)) {
+          hitTrap(item);
+          items.splice(index, 1);
+          continue;
+        }
+      } else if (catches(item, state.brushTime > 0 ? 0.59 : 0.52, 0.54)) {
         collectItem(item);
         items.splice(index, 1);
         continue;
@@ -749,6 +1178,9 @@
       if (item.y > view.height + 48) {
         if (item.type === "skull") {
           burst(item.x, view.baseY + 4, ["#ff2948", "#8c0c23"], 6, 0.55);
+        } else if (item.type === "bomb" || item.type === "bone") {
+          state.trapsDodged += 1;
+          if (state.trapsDodged >= 12) unlockAchievement("dodger");
         }
         items.splice(index, 1);
       }
@@ -807,12 +1239,18 @@
 
     state.shake = Math.max(0, state.shake - dt * 48);
     state.flash = Math.max(0, state.flash - dt * 2.4);
+    state.trapFlash = Math.max(0, state.trapFlash - dt * 2.6);
 
     if (mode === "playing") {
       state.invuln = Math.max(0, state.invuln - dt);
+      state.starTime = Math.max(0, state.starTime - dt);
+      state.brushTime = Math.max(0, state.brushTime - dt);
+      paintBuffs();
       state.elapsed += dt;
       state.waveTime += dt;
       if (state.waveTime >= WAVE_LENGTH) nextWave();
+      if (state.elapsed >= 60) unlockAchievement("survive60");
+      if (state.elapsed >= 45 && state.livesLost === 0) unlockAchievement("flawless45");
 
       updatePlayer(dt);
 
@@ -820,13 +1258,19 @@
       if (state.spawnTimer <= 0) {
         spawnItem();
         state.spawnTimer = waveSpawnInterval() * rand(0.78, 1.18);
-        if (state.wave >= 4 && Math.random() < 0.18) spawnItem();
+        if (state.wave >= 4 && Math.random() < 0.22) spawnItem();
       }
 
       state.heartTimer -= dt;
       if (state.heartTimer <= 0) {
         spawnItem("heart");
         state.heartTimer = rand(21, 30);
+      }
+
+      state.bonusTimer -= dt;
+      if (state.bonusTimer <= 0) {
+        spawnItem(Math.random() < 0.5 ? "star" : "brush");
+        state.bonusTimer = rand(20, 27);
       }
 
       updateItems(dt, t);
@@ -1000,6 +1444,88 @@
       return;
     }
 
+    if (item.type === "star") {
+      const pulse = 1 + Math.sin(t * 5.4 + item.phase) * 0.08;
+      const width = sprites.star.width * item.scale * pulse;
+      const height = sprites.star.height * item.scale * pulse;
+      ctx.save();
+      ctx.globalAlpha = entryAlpha;
+      ctx.translate(item.x, item.y);
+      ctx.rotate(Math.sin(t * 2 + item.phase) * 0.22 + item.t * 0.55);
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 33);
+      glow.addColorStop(0, "rgba(255, 226, 151, 0.5)");
+      glow.addColorStop(0.55, "rgba(255, 193, 70, 0.18)");
+      glow.addColorStop(1, "rgba(255, 193, 70, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(-36, -36, 72, 72);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(sprites.star, -width / 2, -height / 2, width, height);
+      ctx.restore();
+      return;
+    }
+
+    if (item.type === "brush") {
+      const bob = Math.sin(t * 3.8 + item.phase) * 2;
+      const width = sprites.brush.width * item.scale;
+      const height = sprites.brush.height * item.scale;
+      ctx.save();
+      ctx.globalAlpha = entryAlpha;
+      ctx.translate(item.x, item.y + bob);
+      ctx.rotate(Math.sin(t * 2.4 + item.phase) * 0.18);
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(0, 3, 1, 0, 3, 32);
+      glow.addColorStop(0, "rgba(169, 251, 255, 0.36)");
+      glow.addColorStop(0.55, "rgba(255, 93, 120, 0.12)");
+      glow.addColorStop(1, "rgba(103, 244, 255, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(-35, -31, 70, 70);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(sprites.brush, -width / 2, -height / 2, width, height);
+      ctx.restore();
+      return;
+    }
+
+    if (item.type === "bomb") {
+      const pulse = 1 + Math.sin(t * 7 + item.phase) * 0.025;
+      const width = sprites.bomb.width * item.scale * pulse;
+      const height = sprites.bomb.height * item.scale * pulse;
+      ctx.save();
+      ctx.globalAlpha = entryAlpha;
+      ctx.translate(item.x, item.y);
+      ctx.rotate(Math.sin(t * 2 + item.phase) * 0.12 + item.t * item.spin * 0.25);
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 32);
+      glow.addColorStop(0, "rgba(255, 122, 77, 0.38)");
+      glow.addColorStop(1, "rgba(255, 72, 53, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(-35, -35, 70, 70);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(sprites.bomb, -width / 2, -height / 2, width, height);
+      ctx.restore();
+      return;
+    }
+
+    if (item.type === "bone") {
+      const width = sprites.bone.width * item.scale;
+      const height = sprites.bone.height * item.scale;
+      ctx.save();
+      ctx.globalAlpha = entryAlpha;
+      ctx.translate(item.x, item.y);
+      ctx.rotate(Math.sin(t * 2.2 + item.phase) * 0.35 + item.t * item.spin * 0.2);
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 31);
+      glow.addColorStop(0, "rgba(255, 208, 166, 0.3)");
+      glow.addColorStop(0.55, "rgba(191, 104, 140, 0.12)");
+      glow.addColorStop(1, "rgba(255, 208, 166, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(-34, -30, 68, 60);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(sprites.bone, -width / 2, -height / 2, width, height);
+      ctx.restore();
+      return;
+    }
+
     const angle = Math.sin(t * 2.6 + item.phase) * 0.14 + item.t * item.spin * 0.3;
     const width = sprites.skull.width * item.scale;
     const height = sprites.skull.height * item.scale;
@@ -1104,6 +1630,10 @@
       ctx.fillStyle = `rgba(255, 39, 70, ${state.flash * 0.17})`;
       ctx.fillRect(0, 0, view.width, view.height);
     }
+    if (state.trapFlash > 0.002) {
+      ctx.fillStyle = `rgba(255, 132, 70, ${state.trapFlash * 0.14})`;
+      ctx.fillRect(0, 0, view.width, view.height);
+    }
   }
 
   let lastFrame = performance.now();
@@ -1122,6 +1652,14 @@
   }
 
   function onKeyDown(event) {
+    if (!profileScreen.hidden) {
+      if (event.code === "Escape") {
+        event.preventDefault();
+        closeProfile();
+      }
+      return;
+    }
+
     if (event.code === "Space" || event.code === "Enter") {
       if (event.target instanceof Element && event.target.closest("button")) return;
       if (mode === "menu" || (mode === "over" && !overScreen.hidden) || mode === "paused") {
@@ -1172,6 +1710,13 @@
     $("pauseMenuBtn").addEventListener("click", goMenu);
     $("pauseBtn").addEventListener("click", pauseGame);
     $("resumeBtn").addEventListener("click", resumeGame);
+
+    profileBtn.addEventListener("click", openProfile);
+    profileClose.addEventListener("click", closeProfile);
+    profileBack.addEventListener("click", closeProfile);
+    profileScreen.addEventListener("pointerdown", (event) => {
+      if (event.target === profileScreen) closeProfile();
+    });
 
     soundBtn.addEventListener("click", () => {
       sfx.unlock();
@@ -1239,11 +1784,14 @@
   function init() {
     buildLives();
     updateBestLabels();
+    updateAchCounters();
     setSoundUi();
+    gameEl.classList.add("is-menu");
     bind();
     resize();
     paintScore(true);
     paintCombo();
+    paintBuffs();
     window.requestAnimationFrame(frame);
   }
 

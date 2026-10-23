@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b040a">
-  <meta name="description" content="Душеловка — маленькая браузерная игра. Ловите синие души, уворачивайтесь от проклятых черепов и не дайте демонице остаться без сердец.">
-  <meta property="og:title" content="Душеловка — мини-игра">
-  <meta property="og:description" content="Одна демоница. Чужие души. Не попадись под череп.">
+  <meta name="description" content="Душеловка — аркада про Виджи, рыжую лису-художницу. Ловите души, берегите сердца, уворачивайтесь от черепов и не трогайте бомбы.">
+  <meta property="og:title" content="Душеловка — мини-игра про Виджи">
+  <meta property="og:description" content="Виджи — лиса-художница. Чужие души, бомбы и 12 достижений. Не попадись под череп.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://bell-igor.github.io/-x-/">
   <meta property="og:image" content="https://bell-igor.github.io/-x-/assets/og.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Душеловка — мини-игра">
-  <meta name="twitter:description" content="Одна демоница. Чужие души. Не попадись под череп.">
+  <meta name="twitter:title" content="Душеловка — мини-игра про Виджи">
+  <meta name="twitter:description" content="Виджи — лиса-художница. Чужие души, бомбы и 12 достижений. Не попадись под череп.">
   <meta name="twitter:image" content="https://bell-igor.github.io/-x-/assets/og.png">
   <title>Душеловка — мини-игра</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -44,6 +44,19 @@
         <b id="wave">1</b>
       </div>
 
+      <div class="buffs" id="buffs" aria-live="polite">
+        <span class="buff buff--star" id="buffStar" hidden>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-star"></use></svg>
+          <b>×2</b>
+          <em id="buffStarTime">8.0</em>
+        </span>
+        <span class="buff buff--brush" id="buffBrush" hidden>
+          <svg viewBox="0 0 16 18" aria-hidden="true"><use href="#i-brush"></use></svg>
+          <b>магнит</b>
+          <em id="buffBrushTime">8.0</em>
+        </span>
+      </div>
+
       <div class="hud-right">
         <div class="lives" id="lives" aria-label="Жизни: 3 из 3"></div>
         <button class="round-btn" id="pauseBtn" type="button" aria-label="Пауза">
@@ -58,14 +71,20 @@
       <div class="start-copy">
         <p class="kicker"><span class="kicker-dot"></span> мини-игра <span class="kicker-no">01</span></p>
         <h1 class="title"><span>ДУШЕ</span><span class="title-accent">ЛОВКА</span></h1>
-        <p class="tagline">Одна демоница. Чужие души.<br> <span>Не попадись под череп.</span></p>
+        <p class="tagline">Виджи — лиса-художница. Чужие души.<br> <span>Не попадись под череп.</span></p>
       </div>
 
       <div class="start-bottom">
         <div class="rules" aria-label="Правила игры">
-          <span class="rule"><svg viewBox="0 0 16 20" aria-hidden="true"><use href="#i-soul"></use></svg> ловите души</span>
-          <span class="rule"><svg viewBox="0 0 18 18" aria-hidden="true"><use href="#i-skull"></use></svg> бегите от черепов</span>
+          <span class="rule"><svg viewBox="0 0 16 20" aria-hidden="true"><use href="#i-soul"></use></svg> души +</span>
+          <span class="rule"><svg viewBox="0 0 18 18" aria-hidden="true"><use href="#i-skull"></use></svg> черепа −жизнь</span>
+          <span class="rule rule--trap"><svg viewBox="0 0 18 18" aria-hidden="true"><use href="#i-bomb"></use></svg> бомбы −очки</span>
         </div>
+        <p class="bonus-hint">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><use href="#i-star"></use></svg> звезда — двойные очки
+          <i></i>
+          <svg viewBox="0 0 16 18" aria-hidden="true"><use href="#i-brush"></use></svg> кисть — магнит
+        </p>
         <button class="primary" id="startBtn" type="button">
           <span>Играть</span>
           <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
@@ -108,6 +127,48 @@
       </div>
     </section>
 
+    <section class="screen screen--profile" id="profileScreen" hidden>
+      <div class="profile-panel" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+        <button class="profile-close" id="profileClose" type="button" aria-label="Закрыть профиль">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>
+        </button>
+
+        <div class="profile-head">
+          <div class="profile-mark" aria-hidden="true">
+            <svg viewBox="0 0 32 30"><use href="#i-fox"></use></svg>
+          </div>
+          <div>
+            <p class="kicker"><span class="kicker-dot"></span> профиль · виджи</p>
+            <h2 class="profile-title" id="profileTitle">ВИДЖИКС <span>ТАЙЛОРН</span></h2>
+            <p class="profile-sub">16 · лиса · художница · ISFP</p>
+          </div>
+        </div>
+
+        <p class="profile-lore">
+          Рыжая лиса с рожками и очень синим глазом. Рисует, ловит вдохновение и иногда —
+          чужие души. Между скетчбуком и стримом у неё всегда есть местечко для ещё одной истории.
+        </p>
+        <p class="profile-credit">
+          Персонаж и арт — <a href="https://t.me/wydjxkk" target="_blank" rel="noopener noreferrer">Виджи</a>.
+          Лор и стримы — <a href="https://t.me/wydjxk_vt" target="_blank" rel="noopener noreferrer">@wydjxk_vt</a>.
+        </p>
+
+        <div class="ach-head">
+          <h3>достижения</h3>
+          <span id="achCount">0 / 12</span>
+        </div>
+        <ul class="ach-list" id="achList"></ul>
+
+        <button class="ghost" id="profileBack" type="button">Назад</button>
+      </div>
+    </section>
+
+    <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="dialog" aria-controls="profileScreen" aria-expanded="false">
+      <svg viewBox="0 0 32 30" aria-hidden="true"><use href="#i-fox"></use></svg>
+      <span>ВИДЖИ</span>
+      <b id="achPillCount">0/12</b>
+    </button>
+
     <button class="sound" id="soundBtn" type="button" aria-label="Выключить звук" title="Звук">
       <svg viewBox="0 0 24 24" aria-hidden="true"><use id="soundIcon" href="#i-sound"></use></svg>
     </button>
@@ -115,6 +176,12 @@
     <div class="toast" id="toast" role="status" aria-live="polite">
       <b id="toastTitle"></b>
       <span id="toastText"></span>
+    </div>
+
+    <div class="ach-toast" id="achToast" role="status" aria-live="polite">
+      <span><svg viewBox="0 0 20 20" aria-hidden="true"><use href="#i-trophy"></use></svg> достижение</span>
+      <b id="achToastTitle"></b>
+      <small id="achToastDesc"></small>
     </div>
 
     <noscript><p class="noscript">Для игры нужен JavaScript.</p></noscript>
@@ -149,6 +216,38 @@
       <symbol id="i-muted" viewBox="0 0 24 24">
         <path d="M4 9.5h3L12 5v14L7 14.5H4Z" fill="currentColor"/>
         <path d="m16 9 5 5m0-5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-bomb" viewBox="0 0 18 18">
+        <circle cx="8" cy="11" r="5.4" fill="currentColor"/>
+        <path d="M10.8 6.2c.4-2 1.8-2.6 3.1-1.8" fill="none" stroke="#ffe9df" stroke-width="1.4" stroke-linecap="round"/>
+        <path d="M14.4 2.2c.1 1.1-.5 1.8-1.4 1.8s-1.2-.8-.8-1.7c.3-.7 1.1-1.1 2.2-.1Z" fill="#ffd166"/>
+      </symbol>
+      <symbol id="i-bone" viewBox="0 0 20 12">
+        <path d="M4.2 1.2a2.6 2.6 0 0 1 3.5 2.2h4.6a2.6 2.6 0 1 1 3.2 2.7 2.6 2.6 0 1 1-3.2 2.7H7.7A2.6 2.6 0 1 1 4.5 8a2.6 2.6 0 1 1-.3-6.8Z" fill="currentColor"/>
+      </symbol>
+      <symbol id="i-star" viewBox="0 0 16 16">
+        <path d="m8 .8 2.1 4.7 5.1.5-3.9 3.4 1.1 5-4.4-2.7L3.6 14.4l1.1-5L.8 6l5.1-.5Z" fill="currentColor"/>
+      </symbol>
+      <symbol id="i-brush" viewBox="0 0 16 18">
+        <path d="M10.9 1.2 15 5.3c.5.5.4 1.3-.1 1.8l-4.2 4.2-5.6-5.6L9.3 1.5c.4-.5 1.1-.6 1.6-.3Z" fill="currentColor"/>
+        <path d="m4.2 6.7 5.1 5.1-2.3 2.3c-.7.7-1.8.7-2.5 0l-2.6-2.6c-.7-.7-.7-1.8 0-2.5Z" fill="#ffe9df"/>
+        <path d="M2.6 14.6c-.3 1.2-1 1.9-2.1 2.1 1.4.8 3.1.4 3.8-.9.4-.7.2-1.5-.4-1.8-.5-.2-1 0-1.3.6Z" fill="#67f4ff"/>
+      </symbol>
+      <symbol id="i-trophy" viewBox="0 0 20 20">
+        <path d="M5 2h10v4.3c0 3.2-2 5.7-5 6.3-3-.6-5-3.1-5-6.3Z" fill="currentColor"/>
+        <path d="M5 3H2.5v1.7c0 2.2 1.4 3.5 3.2 3.8M15 3h2.5v1.7c0 2.2-1.4 3.5-3.2 3.8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M8.2 12.3h3.6v3H8.2zM6.2 17.6h7.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-fox" viewBox="0 0 32 30">
+        <path d="M3.2 2.3 12 8.8h8l8.8-6.5-1.1 12.4c-.5 7.1-5.3 12-12.7 12S4.8 21.8 3.2 14.7Z" fill="currentColor"/>
+        <path d="m4.4 4.2 6 4.8-5.7 3.8ZM27.6 4.2l-6 4.8 5.7 3.8Z" fill="#0b040a" opacity=".5"/>
+        <path d="M10 18.8c1.7-2.1 4-3 6-3s4.3.9 6 3c-1.3 2.9-3.3 4.3-6 4.3s-4.7-1.4-6-4.3Z" fill="#ffe9df" opacity=".92"/>
+        <circle cx="12.2" cy="14.8" r="1.2" fill="#0b040a"/>
+        <circle cx="19.8" cy="14.8" r="1.2" fill="#0b040a"/>
+        <path d="m16 17.2-1.1 1.6h2.2Z" fill="#0b040a"/>
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </symbol>
     </defs>
   </svg>
