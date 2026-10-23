@@ -72,6 +72,7 @@
   const STORE_SKINS = "dushelovka.skins.v1";
   const STORE_SKIN = "dushelovka.skin.v1";
   const STORE_LEADERBOARD = "dushelovka.leaderboard.v1";
+  const STORE_STATS = "dushelovka.stats.v1";
   const WAVE_LENGTH = 24;
   const MAX_LIVES = 3;
   const MAX_LEADERS = 10;
@@ -97,76 +98,131 @@
       icon: "#i-fox",
     },
     {
-      id: "score500",
+      id: "score1000",
       title: "Виджитаун",
-      desc: "Набрать 500 очков за забег.",
+      desc: "Набрать 1 000 очков за забег.",
       icon: "#i-trophy",
     },
     {
-      id: "score1500",
+      id: "score3000",
       title: "Душеловка",
-      desc: "Набрать 1500 очков за забег.",
+      desc: "Набрать 3 000 очков за забег.",
       icon: "#i-trophy",
     },
     {
-      id: "survive60",
+      id: "survive90",
       title: "Между стримами",
-      desc: "Продержаться 60 секунд.",
+      desc: "Продержаться 90 секунд.",
       icon: "#i-star",
     },
     {
-      id: "flawless45",
+      id: "flawless60",
       title: "Ни царапины",
-      desc: "45 секунд без потери сердец.",
+      desc: "60 секунд без потери сердец.",
       icon: "#i-heart",
     },
     {
-      id: "star",
+      id: "star_souls",
       title: "Звёздный топ",
-      desc: "Поймать звезду.",
+      desc: "Поймать 5 душ под звездой.",
       icon: "#i-star",
     },
     {
-      id: "brush",
+      id: "brush_souls",
       title: "Вдохновение",
-      desc: "Поймать кисть.",
+      desc: "Поймать 10 душ с магнитом.",
       icon: "#i-brush",
     },
     {
-      id: "shielded",
+      id: "shield_blocks",
       title: "Оберег",
-      desc: "Поймать щит.",
+      desc: "Заблокировать 5 дебафов щитом.",
       icon: "#i-shield",
     },
     {
-      id: "time_stop",
+      id: "freeze_souls",
       title: "Пески времени",
-      desc: "Поймать песочные часы.",
+      desc: "Поймать 5 душ, пока время стоит.",
       icon: "#i-hourglass",
     },
     {
       id: "false_heart",
       title: "Ложное сердце",
-      desc: "Пережить чёрное сердце.",
+      desc: "Пережить чёрное сердце без щита.",
       icon: "#i-false-heart",
     },
     {
       id: "dodger",
       title: "Хитрый лис",
-      desc: "Уклониться от 12 ловушек за забег.",
+      desc: "Уклониться от 25 ловушек за забег.",
       icon: "#i-bomb",
     },
     {
       id: "heartsave",
       title: "Второй шанс",
-      desc: "Вылечиться на последнем сердце.",
+      desc: "Дважды вылечиться на последнем сердце.",
       icon: "#i-heart",
     },
     {
       id: "collector",
       title: "Коллекционер",
-      desc: "Поймать 50 душ за забег.",
+      desc: "Поймать 100 душ за забег.",
       icon: "#i-soul",
+    },
+    {
+      id: "hearts_three",
+      title: "Сердцеед",
+      desc: "Собрать 3 сердца за забег.",
+      icon: "#i-heart",
+    },
+    {
+      id: "perfect_wave",
+      title: "Идеальная волна",
+      desc: "Пройти волну без потери сердец.",
+      icon: "#i-star",
+    },
+    {
+      id: "perfect_three",
+      title: "Чистый цикл",
+      desc: "Пройти 3 волны без потери сердец.",
+      icon: "#i-trophy",
+    },
+    {
+      id: "near_miss",
+      title: "Впритык",
+      desc: "Разминуться с 10 дебафами впритык.",
+      icon: "#i-bomb",
+    },
+    {
+      id: "low_life",
+      title: "На последнем дыхании",
+      desc: "45 секунд на последнем сердце с 1 000+ очков.",
+      icon: "#i-heart",
+    },
+    {
+      id: "no_bonus",
+      title: "Своими силами",
+      desc: "Набрать 1 000 очков без бонусов.",
+      icon: "#i-fox",
+    },
+    {
+      id: "runs10",
+      title: "Постоянство",
+      desc: "Сыграть 10 забегов.",
+      icon: "#i-trophy",
+    },
+    {
+      id: "skins3",
+      title: "Модный лис",
+      desc: "Открыть 3 скина.",
+      icon: "#i-fox",
+    },
+    {
+      id: "all_buffs",
+      title: "Идеальный шторм",
+      desc: "Собрать все пять эффектов за один забег.",
+      icon: "#i-star",
+      hidden: true,
     },
   ];
   const ACHIEVEMENT_MAP = new Map(ACHIEVEMENTS.map((achievement) => [achievement.id, achievement]));
@@ -310,6 +366,21 @@
     } catch {
       return [];
     }
+  }
+
+  function loadStats() {
+    try {
+      const parsed = JSON.parse(readStore(STORE_STATS, "{}"));
+      return {
+        runs: Math.max(0, Math.floor(Number(parsed.runs) || 0)),
+      };
+    } catch {
+      return { runs: 0 };
+    }
+  }
+
+  function saveStats() {
+    writeStore(STORE_STATS, JSON.stringify(stats));
   }
 
   class Sfx {
@@ -493,11 +564,24 @@
     soulsCaught: 0,
     soulsEarned: 0,
     trapsDodged: 0,
+    starSouls: 0,
+    brushSouls: 0,
+    freezeSouls: 0,
+    shieldBlocks: 0,
+    heartsCollected: 0,
+    healsAtOne: 0,
+    perfectWaves: 0,
+    waveHits: 0,
+    nearMisses: 0,
+    bonusesCollected: 0,
+    lowLifeTime: 0,
     starTime: 0,
     brushTime: 0,
     shieldTime: 0,
     freezeTime: 0,
     falseHeartTime: 0,
+    falseHeartShielded: false,
+    effectsCollected: new Set(),
     invuln: 0,
     shake: 0,
     flash: 0,
@@ -527,6 +611,7 @@
   let selectedSkinId = readStore(STORE_SKIN, DEFAULT_SKIN.id);
   if (!ownedSkins.has(selectedSkinId)) selectedSkinId = DEFAULT_SKIN.id;
   let leaderboard = loadLeaderboard();
+  let stats = loadStats();
   if (leaderboard.length > 0 && leaderboard[0].score > best) {
     best = leaderboard[0].score;
     writeStore(STORE_BEST, best);
@@ -819,8 +904,9 @@
     const fragment = document.createDocumentFragment();
     ACHIEVEMENTS.forEach((achievement) => {
       const unlocked = unlockedAchievements.has(achievement.id);
+      const secret = Boolean(achievement.hidden && !unlocked);
       const item = document.createElement("li");
-      item.className = `ach-item ${unlocked ? "is-unlocked" : "is-locked"}`;
+      item.className = `ach-item ${unlocked ? "is-unlocked" : "is-locked"}${secret ? " is-secret" : ""}`;
 
       const icon = document.createElement("span");
       icon.className = "ach-icon";
@@ -829,9 +915,9 @@
       const copy = document.createElement("span");
       copy.className = "ach-copy";
       const title = document.createElement("b");
-      title.textContent = achievement.title;
+      title.textContent = secret ? "???" : achievement.title;
       const desc = document.createElement("span");
-      desc.textContent = achievement.desc;
+      desc.textContent = secret ? "Секретное достижение" : achievement.desc;
       copy.append(title, desc);
       item.append(icon, copy);
       fragment.append(item);
@@ -880,8 +966,8 @@
   }
 
   function checkScoreAchievements() {
-    if (state.score >= 500) unlockAchievement("score500");
-    if (state.score >= 1500) unlockAchievement("score1500");
+    if (state.score >= 1000) unlockAchievement("score1000");
+    if (state.score >= 3000) unlockAchievement("score3000");
   }
 
   function saveSouls() {
@@ -936,6 +1022,7 @@
     applySkin(id, { silent: true });
     updateSoulDisplays();
     renderShop();
+    if (ownedSkins.size >= 3) unlockAchievement("skins3");
     showToast("СКИН ОТКРЫТ", skin.name);
     sfx.achievement();
   }
@@ -1242,11 +1329,24 @@
     state.soulsCaught = 0;
     state.soulsEarned = 0;
     state.trapsDodged = 0;
+    state.starSouls = 0;
+    state.brushSouls = 0;
+    state.freezeSouls = 0;
+    state.shieldBlocks = 0;
+    state.heartsCollected = 0;
+    state.healsAtOne = 0;
+    state.perfectWaves = 0;
+    state.waveHits = 0;
+    state.nearMisses = 0;
+    state.bonusesCollected = 0;
+    state.lowLifeTime = 0;
     state.starTime = 0;
     state.brushTime = 0;
     state.shieldTime = 0;
     state.freezeTime = 0;
     state.falseHeartTime = 0;
+    state.falseHeartShielded = false;
+    state.effectsCollected = new Set();
     state.invuln = 0.9;
     state.shake = 0;
     state.flash = 0;
@@ -1287,6 +1387,10 @@
     hideAchievementToast();
     window.clearTimeout(toastTimeout);
     toastEl.classList.remove("is-visible");
+    stats.runs += 1;
+    saveStats();
+    if (stats.runs >= 10) unlockAchievement("runs10");
+    if (state.score >= 1000 && state.bonusesCollected === 0) unlockAchievement("no_bonus");
     const previousBest = best;
     if (state.score > best) {
       best = state.score;
@@ -1356,9 +1460,22 @@
     state.shieldTime = 0;
     state.freezeTime = 0;
     state.falseHeartTime = 0;
+    state.falseHeartShielded = false;
+    state.effectsCollected = new Set();
     state.trapsDodged = 0;
     state.soulsCaught = 0;
     state.soulsEarned = 0;
+    state.starSouls = 0;
+    state.brushSouls = 0;
+    state.freezeSouls = 0;
+    state.shieldBlocks = 0;
+    state.heartsCollected = 0;
+    state.healsAtOne = 0;
+    state.perfectWaves = 0;
+    state.waveHits = 0;
+    state.nearMisses = 0;
+    state.bonusesCollected = 0;
+    state.lowLifeTime = 0;
     items = [];
     particles = [];
     rings = [];
@@ -1385,6 +1502,12 @@
   }
 
   function nextWave() {
+    if (state.waveHits === 0) {
+      state.perfectWaves += 1;
+      unlockAchievement("perfect_wave");
+      if (state.perfectWaves >= 3) unlockAchievement("perfect_three");
+    }
+    state.waveHits = 0;
     state.wave += 1;
     state.waveTime = 0;
     waveEl.textContent = String(state.wave);
@@ -1516,6 +1639,11 @@
     if (hasFalseHeart) buffFalseTime.textContent = state.falseHeartTime.toFixed(1);
   }
 
+  function trackEffect(type) {
+    state.effectsCollected.add(type);
+    if (state.effectsCollected.size >= 5) unlockAchievement("all_buffs");
+  }
+
   function collectItem(item) {
     if (item.type === "soul") {
       const previousMult = state.lastMult;
@@ -1541,15 +1669,32 @@
       unlockAchievement("first_soul");
       if (mult >= 3) unlockAchievement("combo3");
       if (mult >= 5) unlockAchievement("combo5");
-      if (state.soulsCaught >= 50) unlockAchievement("collector");
+      if (state.soulsCaught >= 100) unlockAchievement("collector");
+      if (state.starTime > 0) {
+        state.starSouls += 1;
+        if (state.starSouls >= 5) unlockAchievement("star_souls");
+      }
+      if (state.brushTime > 0) {
+        state.brushSouls += 1;
+        if (state.brushSouls >= 10) unlockAchievement("brush_souls");
+      }
+      if (state.freezeTime > 0) {
+        state.freezeSouls += 1;
+        if (state.freezeSouls >= 5) unlockAchievement("freeze_souls");
+      }
       checkScoreAchievements();
       sfx.pickup(state.combo);
       return;
     }
 
     if (item.type === "heart") {
+      state.heartsCollected += 1;
+      if (state.heartsCollected >= 3) unlockAchievement("hearts_three");
       if (state.lives < MAX_LIVES) {
-        if (state.lives === 1) unlockAchievement("heartsave");
+        if (state.lives === 1) {
+          state.healsAtOne += 1;
+          if (state.healsAtOne >= 2) unlockAchievement("heartsave");
+        }
         state.lives += 1;
         paintLives();
         addFloat(item.x, item.y - 12, "+1 ЖИЗНЬ", "#ffd9df", 12);
@@ -1569,10 +1714,11 @@
     if (item.type === "star") {
       state.starTime = Math.max(state.starTime, 8);
       state.score += 25;
+      state.bonusesCollected += 1;
+      trackEffect("star");
       paintScore();
       paintBuffs();
       checkScoreAchievements();
-      unlockAchievement("star");
       burst(item.x, item.y, ["#fff3c4", "#ffd166", "#ff9b5e", "#ffffff"], 18, 1.2);
       addRing(item.x, item.y, "rgba(255,209,102,.8)", 55);
       addFloat(item.x, item.y - 12, "+25 · ×2", "#ffe4a8", 13);
@@ -1583,8 +1729,9 @@
 
     if (item.type === "brush") {
       state.brushTime = Math.max(state.brushTime, 8);
+      state.bonusesCollected += 1;
+      trackEffect("brush");
       paintBuffs();
-      unlockAchievement("brush");
       burst(item.x, item.y, ["#a9fbff", "#67f4ff", "#ff6f88", "#ffffff"], 18, 1.2);
       addRing(item.x, item.y, "rgba(103,244,255,.8)", 55);
       addFloat(item.x, item.y - 12, "МАГНИТ", "#a9fbff", 12);
@@ -1596,8 +1743,9 @@
     if (item.type === "shield") {
       const duration = rand(10, 20);
       state.shieldTime = Math.max(state.shieldTime, duration);
+      state.bonusesCollected += 1;
+      trackEffect("shield");
       paintBuffs();
-      unlockAchievement("shielded");
       burst(item.x, item.y, ["#bffcff", "#67f4ff", "#18c7e8", "#ffffff"], 20, 1.2);
       addRing(item.x, item.y, "rgba(103,244,255,.85)", 62);
       addFloat(item.x, item.y - 12, "ЩИТ", "#bffcff", 13);
@@ -1608,8 +1756,9 @@
 
     if (item.type === "hourglass") {
       state.freezeTime = Math.max(state.freezeTime, 10);
+      state.bonusesCollected += 1;
+      trackEffect("hourglass");
       paintBuffs();
-      unlockAchievement("time_stop");
       burst(item.x, item.y, ["#fff3c4", "#ffc94f", "#a9fbff", "#ffffff"], 20, 1.2);
       addRing(item.x, item.y, "rgba(255,209,102,.85)", 62);
       addFloat(item.x, item.y - 12, "СТОП 10", "#fff3c4", 12);
@@ -1620,6 +1769,8 @@
 
     if (item.type === "falseheart") {
       state.falseHeartTime = Math.max(state.falseHeartTime, 10);
+      state.falseHeartShielded = false;
+      trackEffect("falseheart");
       state.shake = reducedMotion ? 2 : 7;
       state.flash = 0.45;
       paintBuffs();
@@ -1634,6 +1785,9 @@
 
   function blockDebuff(item) {
     state.shake = reducedMotion ? 1 : 4;
+    state.shieldBlocks += 1;
+    if (state.falseHeartTime > 0) state.falseHeartShielded = true;
+    if (state.shieldBlocks >= 5) unlockAchievement("shield_blocks");
     burst(item.x, item.y, ["#bffcff", "#67f4ff", "#ffffff"], 12, 0.9);
     addRing(item.x, item.y, "rgba(103,244,255,.8)", 48);
     addFloat(item.x, item.y - 10, "ЩИТ", "#bffcff", 12);
@@ -1666,6 +1820,7 @@
   function hurt(item) {
     state.lives = Math.max(0, state.lives - 1);
     state.livesLost += 1;
+    state.waveHits += 1;
     state.combo = 0;
     paintCombo();
     state.invuln = 1.45;
@@ -1757,12 +1912,24 @@
         continue;
       }
 
+      if (
+        isDebuff &&
+        !item.nearMissed &&
+        item.y > view.baseY - view.heroH * 0.4 &&
+        item.y < view.baseY + 4 &&
+        Math.abs(item.x - player.x) < view.heroW * 0.8
+      ) {
+        item.nearMissed = true;
+        state.nearMisses += 1;
+        if (state.nearMisses >= 10) unlockAchievement("near_miss");
+      }
+
       if (item.y > view.height + 48) {
         if (item.type === "skull") {
           burst(item.x, view.baseY + 4, ["#ff2948", "#8c0c23"], 6, 0.55);
         } else if (item.type === "bomb" || item.type === "bone") {
           state.trapsDodged += 1;
-          if (state.trapsDodged >= 12) unlockAchievement("dodger");
+          if (state.trapsDodged >= 25) unlockAchievement("dodger");
         }
         items.splice(index, 1);
       }
@@ -1831,13 +1998,21 @@
       state.freezeTime = Math.max(0, state.freezeTime - dt);
       const falseHeartWasActive = state.falseHeartTime > 0;
       state.falseHeartTime = Math.max(0, state.falseHeartTime - dt);
-      if (falseHeartWasActive && state.falseHeartTime === 0) unlockAchievement("false_heart");
+      if (falseHeartWasActive && state.falseHeartTime === 0 && !state.falseHeartShielded) {
+        unlockAchievement("false_heart");
+      }
       paintBuffs();
       state.elapsed += dt;
       state.waveTime += dt;
       if (state.waveTime >= WAVE_LENGTH) nextWave();
-      if (state.elapsed >= 60) unlockAchievement("survive60");
-      if (state.elapsed >= 45 && state.livesLost === 0) unlockAchievement("flawless45");
+      if (state.elapsed >= 90) unlockAchievement("survive90");
+      if (state.elapsed >= 60 && state.livesLost === 0) unlockAchievement("flawless60");
+      if (state.lives === 1 && state.score >= 1000) {
+        state.lowLifeTime += dt;
+        if (state.lowLifeTime >= 45) unlockAchievement("low_life");
+      } else {
+        state.lowLifeTime = 0;
+      }
 
       updatePlayer(dt);
 
