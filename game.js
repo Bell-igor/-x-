@@ -179,15 +179,15 @@
       price: 0,
       file: "assets/hero.png",
       scale: 1,
-      url: "https://t.me/wydjxk_vt",
-      linkLabel: "telegram",
+      url: "https://www.twitch.tv/wydjxk",
+      linkLabel: "twitch",
       lore: "Рыжая лиса с рожками и синим глазом. Рисует, ловит вдохновение и чужие души, а между скетчбуком и стримом всегда находит место для новой истории.",
     },
     {
       id: "lamia",
       name: "Ламия",
       tag: "сонная ламия",
-      price: 25,
+      price: 500,
       file: "assets/skins/lamia.png",
       scale: 0.96,
       url: "https://www.twitch.tv/lamiyumi",
@@ -198,7 +198,7 @@
       id: "valma",
       name: "Вэлма",
       tag: "уютная искательница хорроров",
-      price: 40,
+      price: 500,
       file: "assets/skins/valma.png",
       scale: 1,
       url: "https://www.twitch.tv/your_valma",
@@ -209,7 +209,7 @@
       id: "aki",
       name: "Аки Гору",
       tag: "тёмная эльфийка",
-      price: 60,
+      price: 500,
       file: "assets/skins/aki.png",
       scale: 0.9,
       url: "https://www.twitch.tv/aki_goru",
@@ -220,7 +220,7 @@
       id: "sheeppy",
       name: "Шиппи Оз",
       tag: "овечка с именем на любой вкус",
-      price: 80,
+      price: 1000,
       file: "assets/skins/sheeppy.png",
       scale: 0.9,
       url: "https://www.twitch.tv/sheeppyoz",
@@ -231,7 +231,7 @@
       id: "bagulya",
       name: "Багуля",
       tag: "гостья из 2007",
-      price: 100,
+      price: 1000,
       file: "assets/skins/bagulya.png",
       scale: 0.8,
       url: "https://www.twitch.tv/bagulya_play",
@@ -925,7 +925,7 @@
     const skin = SKIN_MAP.get(id);
     if (!skin || ownedSkins.has(id)) return;
     if (souls < skin.price) {
-      showToast("НЕ ХВАТАЕТ ДУШ", `нужно ещё ${skin.price - souls}`);
+      showToast("НЕ ХВАТАЕТ ДУШ", `нужно ещё ${formatScore(skin.price - souls)}`);
       sfx.click();
       return;
     }
@@ -967,9 +967,10 @@
       const name = document.createElement("span");
       name.className = "skin-name";
       name.textContent = skin.name;
+      const priceLabel = formatScore(skin.price);
       const price = document.createElement("span");
       price.className = "skin-price";
-      price.textContent = skin.price === 0 ? "бесплатно" : `${skin.price} душ`;
+      price.textContent = skin.price === 0 ? "бесплатно" : `${priceLabel} душ`;
       nameRow.append(name, price);
 
       const tag = document.createElement("p");
@@ -1001,9 +1002,9 @@
         action.textContent = "выбрать";
         action.classList.add("is-select");
       } else if (affordable) {
-        action.textContent = `купить · ${skin.price}`;
+        action.textContent = `купить · ${priceLabel}`;
       } else {
-        action.textContent = `нужно ${skin.price}`;
+        action.textContent = `нужно ${priceLabel}`;
         action.classList.add("is-insufficient");
       }
 
