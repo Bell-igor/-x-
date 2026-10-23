@@ -39,6 +39,12 @@
   const buffBrush = $("buffBrush");
   const buffStarTime = $("buffStarTime");
   const buffBrushTime = $("buffBrushTime");
+  const buffShield = $("buffShield");
+  const buffShieldTime = $("buffShieldTime");
+  const buffFreeze = $("buffFreeze");
+  const buffFreezeTime = $("buffFreezeTime");
+  const buffFalse = $("buffFalse");
+  const buffFalseTime = $("buffFalseTime");
 
   const TAU = Math.PI * 2;
   const STORE_BEST = "dushelovka.best.v1";
@@ -104,6 +110,24 @@
       icon: "#i-brush",
     },
     {
+      id: "shielded",
+      title: "Оберег",
+      desc: "Поймать щит.",
+      icon: "#i-shield",
+    },
+    {
+      id: "time_stop",
+      title: "Пески времени",
+      desc: "Поймать песочные часы.",
+      icon: "#i-hourglass",
+    },
+    {
+      id: "false_heart",
+      title: "Ложное сердце",
+      desc: "Пережить чёрное сердце.",
+      icon: "#i-false-heart",
+    },
+    {
       id: "dodger",
       title: "Хитрый лис",
       desc: "Уклониться от 12 ловушек за забег.",
@@ -127,6 +151,7 @@
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const rand = (min, max) => min + Math.random() * (max - min);
   const pick = (values) => values[(Math.random() * values.length) | 0];
+  const DEBUFF_TYPES = new Set(["skull", "bomb", "bone", "falseheart"]);
 
   function readStore(key, fallback) {
     try {
@@ -260,6 +285,28 @@
       this.noise(0.1, 0.025);
     }
 
+    shield() {
+      this.tone(392, 523, 0.18, "sine", 0.035);
+      this.tone(523, 784, 0.28, "sine", 0.03, 0.1);
+    }
+
+    freeze() {
+      this.tone(880, 660, 0.16, "triangle", 0.028);
+      this.tone(660, 440, 0.22, "triangle", 0.025, 0.1);
+      this.tone(1320, 990, 0.12, "sine", 0.02, 0.2);
+    }
+
+    falseHeart() {
+      this.tone(150, 70, 0.55, "sawtooth", 0.045);
+      this.tone(100, 50, 0.7, "triangle", 0.035, 0.08);
+    }
+
+    shieldBlock() {
+      this.tone(1046, 784, 0.12, "sine", 0.03);
+      this.tone(784, 523, 0.16, "triangle", 0.025, 0.05);
+      this.noise(0.08, 0.02);
+    }
+
     achievement() {
       this.tone(523, 523, 0.11, "sine", 0.032);
       this.tone(659, 659, 0.11, "sine", 0.032, 0.08);
@@ -315,6 +362,9 @@
     trapsDodged: 0,
     starTime: 0,
     brushTime: 0,
+    shieldTime: 0,
+    freezeTime: 0,
+    falseHeartTime: 0,
     invuln: 0,
     shake: 0,
     flash: 0,
@@ -504,6 +554,60 @@
         O: "#d92a3c",
         b: "#d39a6a",
         W: "#67f4ff",
+      },
+    ),
+    shield: createSprite(
+      [
+        "#########",
+        "#OOOOOOO#",
+        "#OOllOOO#",
+        ".#OllOO#.",
+        ".#OOOOO#.",
+        "..#OOO#..",
+        "..#OOO#..",
+        "...#O#...",
+        "...#O#...",
+        "....#....",
+      ],
+      {
+        "#": "#06202b",
+        O: "#18c7e8",
+        l: "#bffcff",
+      },
+    ),
+    hourglass: createSprite(
+      [
+        "########",
+        "#OOOOOO#",
+        ".#OllO#.",
+        "..#OO#..",
+        "...#O#..",
+        "...#O#..",
+        "..#OO#..",
+        ".#OllO#.",
+        "#OOOOOO#",
+        "########",
+      ],
+      {
+        "#": "#3a2105",
+        O: "#ffc94f",
+        l: "#fff3c4",
+      },
+    ),
+    falseheart: createSprite(
+      [
+        ".##..##.",
+        "#BB##BB#",
+        "#BrBBBB#",
+        "#BBBBBB#",
+        ".#BBBB#.",
+        "..#BB#..",
+        "...##...",
+      ],
+      {
+        "#": "#050107",
+        B: "#2b0a1b",
+        r: "#ff3b57",
       },
     ),
   };
@@ -758,11 +862,14 @@
     state.waveTime = 0;
     state.spawnTimer = 0.54;
     state.heartTimer = 13;
-    state.bonusTimer = 10;
+    state.bonusTimer = 8;
     state.soulsCaught = 0;
     state.trapsDodged = 0;
     state.starTime = 0;
     state.brushTime = 0;
+    state.shieldTime = 0;
+    state.freezeTime = 0;
+    state.falseHeartTime = 0;
     state.invuln = 0.9;
     state.shake = 0;
     state.flash = 0;
@@ -863,6 +970,9 @@
     state.invuln = 0;
     state.starTime = 0;
     state.brushTime = 0;
+    state.shieldTime = 0;
+    state.freezeTime = 0;
+    state.falseHeartTime = 0;
     state.trapsDodged = 0;
     state.soulsCaught = 0;
     items = [];
@@ -912,6 +1022,15 @@
     return "soul";
   }
 
+  function pickBonusType() {
+    const roll = Math.random();
+    if (roll < 0.22) return "star";
+    if (roll < 0.44) return "brush";
+    if (roll < 0.66) return "shield";
+    if (roll < 0.86) return "hourglass";
+    return "falseheart";
+  }
+
   function spawnItem(forceType) {
     if (mode !== "playing" || view.width < 80) return;
     const type = forceType || pickFallingType();
@@ -920,7 +1039,8 @@
     const speedBase = (138 + state.wave * 15 + state.elapsed * 0.45) * (view.height / 800);
     let vy = speedBase * rand(0.88, 1.14);
     if (type === "heart") vy *= 0.64;
-    if (type === "star" || type === "brush") vy *= 0.88;
+    if (type === "star" || type === "brush" || type === "shield" || type === "hourglass") vy *= 0.88;
+    if (type === "falseheart") vy *= 0.8;
     if (type === "skull") vy *= 1.04;
     if (type === "bone") vy *= 1.06;
 
@@ -929,6 +1049,9 @@
       heart: 1.08,
       star: 1.05,
       brush: 1,
+      shield: 1.06,
+      hourglass: 1.04,
+      falseheart: 1.08,
       bomb: 1,
       bone: 1,
       skull: 1,
@@ -994,10 +1117,19 @@
   function paintBuffs() {
     const hasStar = state.starTime > 0.05;
     const hasBrush = state.brushTime > 0.05;
+    const hasShield = state.shieldTime > 0.05;
+    const hasFreeze = state.freezeTime > 0.05;
+    const hasFalseHeart = state.falseHeartTime > 0.05;
     buffStar.hidden = !hasStar;
     buffBrush.hidden = !hasBrush;
+    buffShield.hidden = !hasShield;
+    buffFreeze.hidden = !hasFreeze;
+    buffFalse.hidden = !hasFalseHeart;
     if (hasStar) buffStarTime.textContent = state.starTime.toFixed(1);
     if (hasBrush) buffBrushTime.textContent = state.brushTime.toFixed(1);
+    if (hasShield) buffShieldTime.textContent = state.shieldTime.toFixed(1);
+    if (hasFreeze) buffFreezeTime.textContent = state.freezeTime.toFixed(1);
+    if (hasFalseHeart) buffFalseTime.textContent = state.falseHeartTime.toFixed(1);
   }
 
   function collectItem(item) {
@@ -1072,6 +1204,52 @@
       sfx.brush();
       return;
     }
+
+    if (item.type === "shield") {
+      const duration = rand(10, 20);
+      state.shieldTime = Math.max(state.shieldTime, duration);
+      paintBuffs();
+      unlockAchievement("shielded");
+      burst(item.x, item.y, ["#bffcff", "#67f4ff", "#18c7e8", "#ffffff"], 20, 1.2);
+      addRing(item.x, item.y, "rgba(103,244,255,.85)", 62);
+      addFloat(item.x, item.y - 12, "ЩИТ", "#bffcff", 13);
+      showToast("ЩИТ", `защита ${Math.ceil(state.shieldTime)} секунд`);
+      sfx.shield();
+      return;
+    }
+
+    if (item.type === "hourglass") {
+      state.freezeTime = Math.max(state.freezeTime, 10);
+      paintBuffs();
+      unlockAchievement("time_stop");
+      burst(item.x, item.y, ["#fff3c4", "#ffc94f", "#a9fbff", "#ffffff"], 20, 1.2);
+      addRing(item.x, item.y, "rgba(255,209,102,.85)", 62);
+      addFloat(item.x, item.y - 12, "СТОП 10", "#fff3c4", 12);
+      showToast("ПЕСОЧНЫЕ ЧАСЫ", "дебафы замерли на 10 секунд");
+      sfx.freeze();
+      return;
+    }
+
+    if (item.type === "falseheart") {
+      state.falseHeartTime = Math.max(state.falseHeartTime, 10);
+      state.shake = reducedMotion ? 2 : 7;
+      state.flash = 0.45;
+      paintBuffs();
+      burst(item.x, item.y, ["#ff3b57", "#2b0a1b", "#050107", "#b02a52"], 22, 1.15);
+      addRing(item.x, item.y, "rgba(255,59,87,.65)", 68);
+      addFloat(item.x, item.y - 12, "×3 ДЕБАФЫ", "#ff829c", 12);
+      showToast("ЧЁРНОЕ СЕРДЦЕ", "дебафы падают в 3 раза быстрее");
+      sfx.falseHeart();
+      return;
+    }
+  }
+
+  function blockDebuff(item) {
+    state.shake = reducedMotion ? 1 : 4;
+    burst(item.x, item.y, ["#bffcff", "#67f4ff", "#ffffff"], 12, 0.9);
+    addRing(item.x, item.y, "rgba(103,244,255,.8)", 48);
+    addFloat(item.x, item.y - 10, "ЩИТ", "#bffcff", 12);
+    sfx.shieldBlock();
   }
 
   function hitTrap(item) {
@@ -1141,12 +1319,17 @@
   function updateItems(dt, t) {
     for (let index = items.length - 1; index >= 0; index -= 1) {
       const item = items[index];
+      const isDebuff = DEBUFF_TYPES.has(item.type);
+      const frozen = isDebuff && state.freezeTime > 0;
       item.t += dt;
-      item.y += item.vy * dt;
+      if (!frozen) {
+        const speedMultiplier = isDebuff && state.falseHeartTime > 0 ? 3 : 1;
+        item.y += item.vy * dt * speedMultiplier;
+      }
       item.x = item.baseX + Math.sin(item.phase + item.t * (item.type === "skull" ? 1.5 : 2.15)) * item.sway;
       if (item.type === "skull") item.x += Math.sin(t * 2.1 + item.phase) * 1.5;
 
-      if (item.type !== "skull" && item.type !== "bomb" && item.type !== "bone") {
+      if (!isDebuff) {
         const dx = player.x - item.x;
         const magnetRange = view.heroW * (state.brushTime > 0 ? 1.7 : 0.78);
         const magnetPull = state.brushTime > 0 ? 5.2 : 2.4;
@@ -1156,18 +1339,29 @@
         }
       }
 
-      if (item.type === "skull") {
-        if (state.invuln <= 0 && catches(item, 0.4, 0.47)) {
-          hurt(item);
-          items.splice(index, 1);
-          if (mode !== "playing") break;
-          continue;
-        }
-      } else if (item.type === "bomb" || item.type === "bone") {
+      if (isDebuff) {
         if (catches(item, 0.46, 0.5)) {
-          hitTrap(item);
-          items.splice(index, 1);
-          continue;
+          if (state.shieldTime > 0) {
+            blockDebuff(item);
+            items.splice(index, 1);
+            continue;
+          }
+          if (item.type === "skull") {
+            if (state.invuln <= 0) {
+              hurt(item);
+              items.splice(index, 1);
+              if (mode !== "playing") break;
+              continue;
+            }
+          } else if (item.type === "falseheart") {
+            collectItem(item);
+            items.splice(index, 1);
+            continue;
+          } else {
+            hitTrap(item);
+            items.splice(index, 1);
+            continue;
+          }
         }
       } else if (catches(item, state.brushTime > 0 ? 0.59 : 0.52, 0.54)) {
         collectItem(item);
@@ -1245,6 +1439,11 @@
       state.invuln = Math.max(0, state.invuln - dt);
       state.starTime = Math.max(0, state.starTime - dt);
       state.brushTime = Math.max(0, state.brushTime - dt);
+      state.shieldTime = Math.max(0, state.shieldTime - dt);
+      state.freezeTime = Math.max(0, state.freezeTime - dt);
+      const falseHeartWasActive = state.falseHeartTime > 0;
+      state.falseHeartTime = Math.max(0, state.falseHeartTime - dt);
+      if (falseHeartWasActive && state.falseHeartTime === 0) unlockAchievement("false_heart");
       paintBuffs();
       state.elapsed += dt;
       state.waveTime += dt;
@@ -1269,8 +1468,8 @@
 
       state.bonusTimer -= dt;
       if (state.bonusTimer <= 0) {
-        spawnItem(Math.random() < 0.5 ? "star" : "brush");
-        state.bonusTimer = rand(20, 27);
+        spawnItem(pickBonusType());
+        state.bonusTimer = rand(14, 20);
       }
 
       updateItems(dt, t);
@@ -1486,6 +1685,68 @@
       return;
     }
 
+    if (item.type === "shield") {
+      const pulse = 1 + Math.sin(t * 4.6 + item.phase) * 0.04;
+      const width = sprites.shield.width * item.scale * pulse;
+      const height = sprites.shield.height * item.scale * pulse;
+      ctx.save();
+      ctx.globalAlpha = entryAlpha;
+      ctx.translate(item.x, item.y);
+      ctx.rotate(Math.sin(t * 2 + item.phase) * 0.08);
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 34);
+      glow.addColorStop(0, "rgba(191, 252, 255, 0.46)");
+      glow.addColorStop(0.55, "rgba(24, 199, 232, 0.16)");
+      glow.addColorStop(1, "rgba(24, 199, 232, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(-37, -37, 74, 74);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(sprites.shield, -width / 2, -height / 2, width, height);
+      ctx.restore();
+      return;
+    }
+
+    if (item.type === "hourglass") {
+      const width = sprites.hourglass.width * item.scale;
+      const height = sprites.hourglass.height * item.scale;
+      ctx.save();
+      ctx.globalAlpha = entryAlpha;
+      ctx.translate(item.x, item.y);
+      ctx.rotate(Math.sin(t * 1.8 + item.phase) * 0.18);
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 33);
+      glow.addColorStop(0, "rgba(255, 243, 196, 0.48)");
+      glow.addColorStop(0.55, "rgba(255, 201, 79, 0.16)");
+      glow.addColorStop(1, "rgba(255, 201, 79, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(-36, -36, 72, 72);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(sprites.hourglass, -width / 2, -height / 2, width, height);
+      ctx.restore();
+      return;
+    }
+
+    if (item.type === "falseheart") {
+      const pulse = 1 + Math.sin(t * 6.4 + item.phase) * 0.07;
+      const width = sprites.falseheart.width * item.scale * pulse;
+      const height = sprites.falseheart.height * item.scale * pulse;
+      ctx.save();
+      ctx.globalAlpha = entryAlpha;
+      ctx.translate(item.x, item.y);
+      ctx.rotate(Math.sin(t * 3.4 + item.phase) * 0.08);
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, 34);
+      glow.addColorStop(0, "rgba(255, 59, 87, 0.36)");
+      glow.addColorStop(0.55, "rgba(120, 10, 52, 0.2)");
+      glow.addColorStop(1, "rgba(90, 0, 34, 0)");
+      ctx.fillStyle = glow;
+      ctx.fillRect(-37, -34, 74, 68);
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(sprites.falseheart, -width / 2, -height / 2, width, height);
+      ctx.restore();
+      return;
+    }
+
     if (item.type === "bomb") {
       const pulse = 1 + Math.sin(t * 7 + item.phase) * 0.025;
       const width = sprites.bomb.width * item.scale * pulse;
@@ -1541,6 +1802,85 @@
     ctx.fillRect(-32, -32, 64, 64);
     ctx.globalCompositeOperation = "source-over";
     ctx.drawImage(sprites.skull, -width / 2, -height / 2, width, height);
+    ctx.restore();
+  }
+
+  function drawFrozenMarks(t) {
+    if (state.freezeTime <= 0.05) return;
+    items.forEach((item) => {
+      if (!DEBUFF_TYPES.has(item.type)) return;
+      const alpha = 0.35 + Math.sin(t * 3 + item.phase) * 0.12;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = "rgba(169, 251, 255, 0.9)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(item.x, item.y, 18, 0, TAU);
+      ctx.stroke();
+      ctx.fillStyle = "#a9fbff";
+      ctx.fillRect(item.x - 2.5, item.y - 5, 2, 8);
+      ctx.fillRect(item.x + 1, item.y - 5, 2, 8);
+      ctx.restore();
+    });
+  }
+
+  function drawCursedAura(t) {
+    if (state.falseHeartTime <= 0.05) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const pulse = 0.75 + Math.sin(t * 4.2) * 0.25;
+    const glow = ctx.createRadialGradient(
+      player.x,
+      view.baseY - view.heroH * 0.35,
+      4,
+      player.x,
+      view.baseY - view.heroH * 0.35,
+      view.heroW * 0.9,
+    );
+    glow.addColorStop(0, `rgba(255, 33, 83, ${0.12 * pulse})`);
+    glow.addColorStop(0.55, `rgba(70, 0, 35, ${0.1 * pulse})`);
+    glow.addColorStop(1, "rgba(25, 0, 14, 0)");
+    ctx.fillStyle = glow;
+    ctx.fillRect(
+      player.x - view.heroW,
+      view.baseY - view.heroH * 1.35,
+      view.heroW * 2,
+      view.heroH * 1.8,
+    );
+    ctx.restore();
+  }
+
+  function drawShieldBubble(t) {
+    if (state.shieldTime <= 0.05) return;
+    const centerY = view.baseY - view.heroH * 0.48;
+    const radius = Math.max(view.heroW * 0.64, view.heroH * 0.36);
+    const pulse = 0.86 + Math.sin(t * 3.4) * 0.06;
+    ctx.save();
+    ctx.translate(player.x, centerY);
+    ctx.globalCompositeOperation = "lighter";
+    const fill = ctx.createRadialGradient(0, 0, radius * 0.55, 0, 0, radius * 1.05);
+    fill.addColorStop(0, "rgba(103, 244, 255, 0.02)");
+    fill.addColorStop(0.8, "rgba(103, 244, 255, 0.07)");
+    fill.addColorStop(1, "rgba(103, 244, 255, 0)");
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * 1.05, 0, TAU);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(169, 251, 255, 0.48)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(0, 0, radius * pulse, 0, TAU);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.32)";
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i += 1) {
+      const start = t * 0.7 + (i * TAU) / 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 1.06, start, start + 0.42);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
@@ -1621,7 +1961,10 @@
     drawBackground(t);
     drawFloor(t);
     items.forEach((item) => drawItem(item, t));
+    drawFrozenMarks(t);
+    drawCursedAura(t);
     drawHero(t);
+    drawShieldBubble(t);
     drawParticles();
     drawFloats();
     ctx.restore();

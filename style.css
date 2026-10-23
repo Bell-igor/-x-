@@ -775,7 +775,11 @@ button:focus-visible {
   left: 50%;
   z-index: 1;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 5px;
+  width: calc(100% - 36px);
+  max-width: 360px;
   pointer-events: none;
   transform: translateX(-50%);
 }
@@ -830,18 +834,55 @@ button:focus-visible {
   box-shadow: 0 0 18px rgba(103, 244, 255, 0.08);
 }
 
+.buff--shield {
+  border-color: rgba(103, 244, 255, 0.38);
+  color: #a9fbff;
+  box-shadow: 0 0 18px rgba(103, 244, 255, 0.14);
+}
+
+.buff--freeze {
+  border-color: rgba(255, 209, 102, 0.36);
+  color: #ffe0a1;
+  box-shadow: 0 0 18px rgba(255, 193, 70, 0.1);
+}
+
+.buff--false {
+  border-color: rgba(255, 71, 112, 0.36);
+  background: rgba(34, 4, 17, 0.78);
+  color: #ff829c;
+  box-shadow: 0 0 18px rgba(255, 30, 76, 0.12);
+}
+
 .bonus-hint {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px;
-  margin: 0 0 12px;
+  margin: 0 0 7px;
   color: rgba(255, 233, 223, 0.38);
   font-size: 8px;
   font-weight: 600;
   letter-spacing: 0.065em;
   line-height: 1.4;
   text-transform: uppercase;
+}
+
+.bonus-hint--special {
+  margin-top: -1px;
+  margin-bottom: 10px;
+  color: rgba(255, 233, 223, 0.32);
+}
+
+.bonus-hint--special svg:first-of-type {
+  color: #67f4ff;
+}
+
+.bonus-hint--special svg:nth-of-type(2) {
+  color: #ffd166;
+}
+
+.bonus-hint--special svg:nth-of-type(3) {
+  color: #ff6b8b;
 }
 
 .bonus-hint svg {
@@ -1428,6 +1469,12 @@ button:focus-visible {
   }
 
   .keyhint {
+    display: none;
+  }
+}
+
+@media (max-width: 360px), (max-height: 640px) {
+  .bonus-hint--special {
     display: none;
   }
 }
