@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b040a">
+  <meta name="description" content="Душеловка — маленькая браузерная игра. Ловите синие души, уворачивайтесь от проклятых черепов и не дайте демонице остаться без сердец.">
+  <meta property="og:title" content="Душеловка — мини-игра">
+  <meta property="og:description" content="Одна демоница. Чужие души. Не попадись под череп.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://bell-igor.github.io/-x-/">
+  <meta property="og:image" content="https://bell-igor.github.io/-x-/assets/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Душеловка — мини-игра">
+  <meta name="twitter:description" content="Одна демоница. Чужие души. Не попадись под череп.">
+  <meta name="twitter:image" content="https://bell-igor.github.io/-x-/assets/og.png">
+  <title>Душеловка — мини-игра</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/unbounded-800.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/fonts/onest-400.ttf" as="font" type="font/ttf" crossorigin>
+  <link rel="preload" href="assets/hero.png" as="image">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+
+  <main class="game" id="game" tabindex="-1">
+    <canvas id="stage" aria-label="Игровое поле: двигайте демоницу, ловите души и избегайте черепов"></canvas>
+    <div class="vignette" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="hud" id="hud" aria-hidden="true">
+      <div class="score-box">
+        <span class="hud-label">очки</span>
+        <strong class="hud-score" id="score">0000</strong>
+        <div class="combo" id="combo">
+          <span class="combo-mult" id="comboMult">×2</span>
+          <span class="combo-track"><i id="comboFill"></i></span>
+        </div>
+      </div>
+
+      <div class="wave-badge">
+        <span>волна</span>
+        <b id="wave">1</b>
+      </div>
+
+      <div class="hud-right">
+        <div class="lives" id="lives" aria-label="Жизни: 3 из 3"></div>
+        <button class="round-btn" id="pauseBtn" type="button" aria-label="Пауза">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-pause"></use></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="screen screen--start" id="startScreen">
+      <div class="best-pill">рекорд <b id="bestStart">0</b></div>
+
+      <div class="start-copy">
+        <p class="kicker"><span class="kicker-dot"></span> мини-игра <span class="kicker-no">01</span></p>
+        <h1 class="title"><span>ДУШЕ</span><span class="title-accent">ЛОВКА</span></h1>
+        <p class="tagline">Одна демоница. Чужие души.<br> <span>Не попадись под череп.</span></p>
+      </div>
+
+      <div class="start-bottom">
+        <div class="rules" aria-label="Правила игры">
+          <span class="rule"><svg viewBox="0 0 16 20" aria-hidden="true"><use href="#i-soul"></use></svg> ловите души</span>
+          <span class="rule"><svg viewBox="0 0 18 18" aria-hidden="true"><use href="#i-skull"></use></svg> бегите от черепов</span>
+        </div>
+        <button class="primary" id="startBtn" type="button">
+          <span>Играть</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        </button>
+        <p class="keyhint">Space / Enter <i></i> мышь или палец</p>
+      </div>
+    </section>
+
+    <section class="screen screen--pause" id="pauseScreen" tabindex="-1" hidden>
+      <div class="panel panel--small">
+        <p class="kicker"><span class="kicker-dot"></span> передышка</p>
+        <h2 class="panel-title">ПАУЗА</h2>
+        <p class="panel-copy">Души подождут.</p>
+        <button class="primary" id="resumeBtn" type="button">
+          <span>Продолжить</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        </button>
+        <button class="ghost" id="pauseMenuBtn" type="button">В меню</button>
+      </div>
+    </section>
+
+    <section class="screen screen--over" id="overScreen" tabindex="-1" hidden>
+      <div class="panel">
+        <p class="kicker"><span class="kicker-dot"></span> сеанс завершён</p>
+        <h2 class="panel-title">ДУШИ<br><span>УСКОЛЬЗНУЛИ</span></h2>
+
+        <div class="result">
+          <span>ваш счёт</span>
+          <strong id="finalScore">0</strong>
+        </div>
+
+        <p class="record-line">лучший результат <b id="bestOver">0</b></p>
+        <p class="new-record" id="newRecord" hidden>новый рекорд!</p>
+
+        <button class="primary" id="restartBtn" type="button">
+          <span>Ещё раз</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        </button>
+        <button class="ghost" id="menuBtn" type="button">В меню</button>
+      </div>
+    </section>
+
+    <button class="sound" id="soundBtn" type="button" aria-label="Выключить звук" title="Звук">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use id="soundIcon" href="#i-sound"></use></svg>
+    </button>
+
+    <div class="toast" id="toast" role="status" aria-live="polite">
+      <b id="toastTitle"></b>
+      <span id="toastText"></span>
+    </div>
+
+    <noscript><p class="noscript">Для игры нужен JavaScript.</p></noscript>
+  </main>
+
+  <svg class="icon-defs" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-heart" viewBox="0 0 20 18">
+        <path d="M10 17.2 2.7 10.5C-.5 7.4 1.7 2 6.1 2c2 0 3.2 1.1 3.9 2.2C10.7 3.1 12 2 14 2c4.4 0 6.6 5.4 3.4 8.5Z" fill="currentColor"/>
+        <path d="M5.8 4.3c-1.4.2-2.2 1.5-2.1 2.7" fill="none" stroke="#ffd9df" stroke-width="1.4" stroke-linecap="round" opacity=".6"/>
+      </symbol>
+      <symbol id="i-soul" viewBox="0 0 16 20">
+        <path d="M8 1c0 4-6 5.8-6 10.7A6 6 0 0 0 8 18a6 6 0 0 0 6-6.3C14 8.6 12.2 6.7 11 5c.1 2-.8 3.2-2 4.2C9.5 6.6 9.4 3.5 8 1Z" fill="currentColor"/>
+        <path d="M8 10c0 1.5-2 2.5-2 4a2 2 0 0 0 4 0c0-1.5-1-2.5-2-4Z" fill="#eaffff"/>
+      </symbol>
+      <symbol id="i-skull" viewBox="0 0 18 18">
+        <path d="M9 1.2c-4 0-6.7 2.6-6.7 6.2 0 1.9.9 3.2 2 4v2.8c0 1 .8 1.8 1.8 1.8h5.8c1 0 1.8-.8 1.8-1.8v-2.8c1.1-.8 2-2.1 2-4C15.7 3.8 13 1.2 9 1.2Z" fill="currentColor"/>
+        <path d="M5.4 7.3a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Zm7.2 0a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z" fill="#280711"/>
+        <path d="M7.2 13.4v2.6m3.6-2.6v2.6" stroke="#280711" stroke-width="1.2"/>
+      </symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24">
+        <rect x="7" y="5" width="3.5" height="14" rx="1.3" fill="currentColor"/>
+        <rect x="13.5" y="5" width="3.5" height="14" rx="1.3" fill="currentColor"/>
+      </symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24">
+        <path d="M5 12h13M13 6.5 18.5 12 13 17.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </symbol>
+      <symbol id="i-sound" viewBox="0 0 24 24">
+        <path d="M4 9.5h3L12 5v14L7 14.5H4Z" fill="currentColor"/>
+        <path d="M15.5 8.3a5.3 5.3 0 0 1 0 7.4M18.2 5.5a9.2 9.2 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-muted" viewBox="0 0 24 24">
+        <path d="M4 9.5h3L12 5v14L7 14.5H4Z" fill="currentColor"/>
+        <path d="m16 9 5 5m0-5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <script src="game.js"></script>
+</body>
+</html>
