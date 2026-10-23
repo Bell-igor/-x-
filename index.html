@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0b040a">
-  <meta name="description" content="Душеловка — аркада про Виджи, рыжую лису-художницу. Ловите души, берегите сердца, уворачивайтесь от черепов, бомб и чёрных сердец.">
+  <meta name="description" content="Душеловка — аркада про Виджи, рыжую лису-художницу. Ловите души, открывайте скины гостевых персонажей и попадайте в локальный топ-10.">
   <meta property="og:title" content="Душеловка — мини-игра про Виджи">
-  <meta property="og:description" content="Виджи — лиса-художница. Чужие души, щиты, ловушки и 15 достижений. Не попадись под череп.">
+  <meta property="og:description" content="Виджи — лиса-художница. Души, бонусы, 15 достижений, магазин скинов и таблица лидеров.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://bell-igor.github.io/-x-/">
   <meta property="og:image" content="https://bell-igor.github.io/-x-/assets/og.png">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Душеловка — мини-игра про Виджи">
-  <meta name="twitter:description" content="Виджи — лиса-художница. Чужие души, щиты, ловушки и 15 достижений. Не попадись под череп.">
+  <meta name="twitter:description" content="Виджи — лиса-художница. Души, бонусы, 15 достижений, магазин скинов и таблица лидеров.">
   <meta name="twitter:image" content="https://bell-igor.github.io/-x-/assets/og.png">
   <title>Душеловка — мини-игра</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -86,7 +86,7 @@
       <div class="start-copy">
         <p class="kicker"><span class="kicker-dot"></span> мини-игра <span class="kicker-no">01</span></p>
         <h1 class="title"><span>ДУШЕ</span><span class="title-accent">ЛОВКА</span></h1>
-        <p class="tagline">Виджи — лиса-художница. Чужие души.<br> <span>Не попадись под череп.</span></p>
+        <p class="tagline"><b id="taglineName">Виджи</b> — <span class="tagline-role" id="taglineRole">лиса-художница</span>. Чужие души.<br> <span>Не попадись под череп.</span></p>
       </div>
 
       <div class="start-bottom">
@@ -112,6 +112,11 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
         </button>
         <p class="keyhint">Space / Enter <i></i> мышь или палец</p>
+        <div class="quick-links">
+          <button id="quickShopBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><use href="#i-bag"></use></svg> магазин</button>
+          <i></i>
+          <button id="quickLeadersBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><use href="#i-list"></use></svg> лидеры</button>
+        </div>
       </div>
     </section>
 
@@ -140,6 +145,12 @@
 
         <p class="record-line">лучший результат <b id="bestOver">0</b></p>
         <p class="new-record" id="newRecord" hidden>новый рекорд!</p>
+        <p class="souls-line">души <b id="runSouls">+0</b> <span>·</span> всего <b id="totalSouls">0</b></p>
+        <div class="over-links">
+          <button id="overShopBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><use href="#i-bag"></use></svg> магазин</button>
+          <i></i>
+          <button id="overLeadersBtn" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><use href="#i-list"></use></svg> лидеры</button>
+        </div>
 
         <button class="primary" id="restartBtn" type="button">
           <span>Ещё раз</span>
@@ -160,35 +171,72 @@
             <svg viewBox="0 0 32 30"><use href="#i-fox"></use></svg>
           </div>
           <div>
-            <p class="kicker"><span class="kicker-dot"></span> профиль · виджи</p>
+            <p class="kicker"><span class="kicker-dot"></span> виджи · хаб</p>
             <h2 class="profile-title" id="profileTitle">ВИДЖИКС <span>ТАЙЛОРН</span></h2>
             <p class="profile-sub">16 · лиса · художница · ISFP</p>
           </div>
         </div>
 
-        <p class="profile-lore">
-          Рыжая лиса с рожками и очень синим глазом. Рисует, ловит вдохновение и иногда —
-          чужие души. Между скетчбуком и стримом у неё всегда есть местечко для ещё одной истории.
-        </p>
-        <p class="profile-credit">
-          Персонаж и арт — <a href="https://t.me/wydjxkk" target="_blank" rel="noopener noreferrer">Виджи</a>.
-          Лор и стримы — <a href="https://t.me/wydjxk_vt" target="_blank" rel="noopener noreferrer">@wydjxk_vt</a>.
-        </p>
-
-        <div class="ach-head">
-          <h3>достижения</h3>
-          <span id="achCount">0 / 12</span>
+        <div class="hub-meta">
+          <span class="soul-balance"><svg viewBox="0 0 16 20" aria-hidden="true"><use href="#i-soul"></use></svg> <b id="hubSouls">0</b> душ</span>
+          <span class="hub-record">рекорд <b id="hubBest">0</b></span>
         </div>
-        <ul class="ach-list" id="achList"></ul>
+
+        <div class="hub-tabs" role="tablist" aria-label="Разделы профиля">
+          <button class="hub-tab is-active" type="button" role="tab" data-tab="profile" aria-selected="true">профиль</button>
+          <button class="hub-tab" type="button" role="tab" data-tab="shop" aria-selected="false">магазин</button>
+          <button class="hub-tab" type="button" role="tab" data-tab="leaders" aria-selected="false">лидеры</button>
+        </div>
+
+        <div class="hub-pane" id="hubProfile">
+          <p class="profile-lore">
+            Рыжая лиса с рожками и очень синим глазом. Рисует, ловит вдохновение и иногда —
+            чужие души. Между скетчбуком и стримом у неё всегда есть местечко для ещё одной истории.
+          </p>
+          <p class="profile-credit">
+            Персонаж и арт — <a href="https://t.me/wydjxkk" target="_blank" rel="noopener noreferrer">Виджи</a>.
+            Лор и стримы — <a href="https://t.me/wydjxk_vt" target="_blank" rel="noopener noreferrer">@wydjxk_vt</a>.
+          </p>
+
+          <div class="ach-head">
+            <h3>достижения</h3>
+            <span id="achCount">0 / 15</span>
+          </div>
+          <ul class="ach-list" id="achList"></ul>
+        </div>
+
+        <div class="hub-pane" id="hubShop" hidden>
+          <div class="shop-top">
+            <div>
+              <span class="shop-label">души</span>
+              <strong id="shopSouls">0</strong>
+            </div>
+            <small>+1 душа за каждую пойманную искру</small>
+          </div>
+          <div class="skin-grid" id="skinGrid"></div>
+          <p class="shop-credit">
+            Арты гостевых скинов — <a href="https://t.me/FieryHeart66" target="_blank" rel="noopener noreferrer">Артём Юрченко</a>
+            · <a href="https://t.me/FieryHeart66" target="_blank" rel="noopener noreferrer">@FieryHeart66</a>
+          </p>
+        </div>
+
+        <div class="hub-pane" id="hubLeaders" hidden>
+          <div class="ach-head">
+            <h3>лучшие забеги</h3>
+            <span id="leaderCount">0 / 10</span>
+          </div>
+          <ol class="leader-list" id="leaderList"></ol>
+          <p class="leaders-note">Локальный топ-10: рекорды хранятся в этом браузере.</p>
+        </div>
 
         <button class="ghost" id="profileBack" type="button">Назад</button>
       </div>
     </section>
 
-    <button class="profile-btn" id="profileBtn" type="button" aria-haspopup="dialog" aria-controls="profileScreen" aria-expanded="false">
+    <button class="profile-btn" id="profileBtn" type="button" aria-label="Профиль, магазин и лидеры" aria-haspopup="dialog" aria-controls="profileScreen" aria-expanded="false">
       <svg viewBox="0 0 32 30" aria-hidden="true"><use href="#i-fox"></use></svg>
       <span>ВИДЖИ</span>
-      <b id="achPillCount">0/12</b>
+      <b id="achPillCount">0/15</b>
     </button>
 
     <button class="sound" id="soundBtn" type="button" aria-label="Выключить звук" title="Звук">
@@ -270,6 +318,17 @@
       </symbol>
       <symbol id="i-close" viewBox="0 0 24 24">
         <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-bag" viewBox="0 0 20 20">
+        <path d="M4 6h12l1 12H3Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M7 7V4.8A3 3 0 0 1 10 2a3 3 0 0 1 3 2.8V7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M7 10h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="i-list" viewBox="0 0 20 20">
+        <path d="M4 5h12M4 10h12M4 15h12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="2" cy="5" r="1" fill="currentColor"/>
+        <circle cx="2" cy="10" r="1" fill="currentColor"/>
+        <circle cx="2" cy="15" r="1" fill="currentColor"/>
       </symbol>
       <symbol id="i-shield" viewBox="0 0 20 22">
         <path d="M10 1.2 18 4v6.2c0 4.6-3.1 8.4-8 10.6-4.9-2.2-8-6-8-10.6V4Z" fill="currentColor"/>

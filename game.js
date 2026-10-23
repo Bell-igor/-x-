@@ -18,6 +18,8 @@
   const livesEl = $("lives");
   const bestStartEl = $("bestStart");
   const bestOverEl = $("bestOver");
+  const taglineNameEl = $("taglineName");
+  const taglineRoleEl = $("taglineRole");
   const finalScoreEl = $("finalScore");
   const newRecordEl = $("newRecord");
   const toastEl = $("toast");
@@ -29,6 +31,7 @@
   const profileBtn = $("profileBtn");
   const profileClose = $("profileClose");
   const profileBack = $("profileBack");
+  const profilePanel = document.querySelector(".profile-panel");
   const achList = $("achList");
   const achCount = $("achCount");
   const achPillCount = $("achPillCount");
@@ -45,13 +48,33 @@
   const buffFreezeTime = $("buffFreezeTime");
   const buffFalse = $("buffFalse");
   const buffFalseTime = $("buffFalseTime");
+  const hubSouls = $("hubSouls");
+  const shopSouls = $("shopSouls");
+  const hubBest = $("hubBest");
+  const hubProfile = $("hubProfile");
+  const hubShop = $("hubShop");
+  const hubLeaders = $("hubLeaders");
+  const skinGrid = $("skinGrid");
+  const leaderList = $("leaderList");
+  const leaderCount = $("leaderCount");
+  const runSouls = $("runSouls");
+  const totalSouls = $("totalSouls");
+  const quickShopBtn = $("quickShopBtn");
+  const quickLeadersBtn = $("quickLeadersBtn");
+  const overShopBtn = $("overShopBtn");
+  const overLeadersBtn = $("overLeadersBtn");
 
   const TAU = Math.PI * 2;
   const STORE_BEST = "dushelovka.best.v1";
   const STORE_SOUND = "dushelovka.sound.v1";
   const STORE_ACHIEVEMENTS = "dushelovka.achievements.v1";
+  const STORE_SOULS = "dushelovka.souls.v1";
+  const STORE_SKINS = "dushelovka.skins.v1";
+  const STORE_SKIN = "dushelovka.skin.v1";
+  const STORE_LEADERBOARD = "dushelovka.leaderboard.v1";
   const WAVE_LENGTH = 24;
   const MAX_LIVES = 3;
+  const MAX_LEADERS = 10;
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const ACHIEVEMENTS = [
@@ -148,6 +171,77 @@
   ];
   const ACHIEVEMENT_MAP = new Map(ACHIEVEMENTS.map((achievement) => [achievement.id, achievement]));
 
+  const SKINS = [
+    {
+      id: "widjik",
+      name: "Виджи",
+      tag: "лиса-художница",
+      price: 0,
+      file: "assets/hero.png",
+      scale: 1,
+      url: "https://t.me/wydjxk_vt",
+      linkLabel: "telegram",
+      lore: "Рыжая лиса с рожками и синим глазом. Рисует, ловит вдохновение и чужие души, а между скетчбуком и стримом всегда находит место для новой истории.",
+    },
+    {
+      id: "lamia",
+      name: "Ламия",
+      tag: "сонная ламия",
+      price: 25,
+      file: "assets/skins/lamia.png",
+      scale: 0.96,
+      url: "https://www.twitch.tv/lamiyumi",
+      linkLabel: "twitch",
+      lore: "Очаровательная сонная ламия, которая вещает для вас между снами. Может задремать посреди стрима, но души ловит даже во сне.",
+    },
+    {
+      id: "valma",
+      name: "Вэлма",
+      tag: "уютная искательница хорроров",
+      price: 40,
+      file: "assets/skins/valma.png",
+      scale: 1,
+      url: "https://www.twitch.tv/your_valma",
+      linkLabel: "twitch",
+      lore: "Рогатая стримерша, которая создала канал, чтобы попробовать что-то новое, и теперь смело идёт навстречу страху хорроров. Иногда — вместе с кем-то в коопе.",
+    },
+    {
+      id: "aki",
+      name: "Аки Гору",
+      tag: "тёмная эльфийка",
+      price: 60,
+      file: "assets/skins/aki.png",
+      scale: 0.9,
+      url: "https://www.twitch.tv/aki_goru",
+      linkLabel: "twitch",
+      lore: "Тёмная эльфийка Аки: рисует, играет в TES и Animal Crossing, пишет стихи и любит Джотаро. Между заказами обязательно найдёт минутку для печенек.",
+    },
+    {
+      id: "sheeppy",
+      name: "Шиппи Оз",
+      tag: "овечка с именем на любой вкус",
+      price: 80,
+      file: "assets/skins/sheeppy.png",
+      scale: 0.9,
+      url: "https://www.twitch.tv/sheeppyoz",
+      linkLabel: "twitch",
+      lore: "Белая овечка Шиппи, которая отзывается почти на любое имя. Любит «Ведьмака», уютные стримы и, кажется, давно смирилась с бесконечными прозвищами.",
+    },
+    {
+      id: "bagulya",
+      name: "Багуля",
+      tag: "гостья из 2007",
+      price: 100,
+      file: "assets/skins/bagulya.png",
+      scale: 0.8,
+      url: "https://www.twitch.tv/bagulya_play",
+      linkLabel: "twitch",
+      lore: "Гостья из 2007 года с бирюзовыми волосами. Зашла на стрим и задержалась; обожает осенние страшилки и загадочные истории.",
+    },
+  ];
+  const SKIN_MAP = new Map(SKINS.map((skin) => [skin.id, skin]));
+  const DEFAULT_SKIN = SKINS[0];
+
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const rand = (min, max) => min + Math.random() * (max - min);
   const pick = (values) => values[(Math.random() * values.length) | 0];
@@ -177,6 +271,44 @@
       return new Set(parsed.filter((id) => ACHIEVEMENT_MAP.has(id)));
     } catch {
       return new Set();
+    }
+  }
+
+  function loadSouls() {
+    return Math.max(0, Math.floor(Number(readStore(STORE_SOULS, "0")) || 0));
+  }
+
+  function loadOwnedSkins() {
+    const owned = new Set([DEFAULT_SKIN.id]);
+    try {
+      const parsed = JSON.parse(readStore(STORE_SKINS, "[]"));
+      if (Array.isArray(parsed)) {
+        parsed.forEach((id) => {
+          if (SKIN_MAP.has(id)) owned.add(id);
+        });
+      }
+    } catch {
+      /* Ignore malformed storage. */
+    }
+    return owned;
+  }
+
+  function loadLeaderboard() {
+    try {
+      const parsed = JSON.parse(readStore(STORE_LEADERBOARD, "[]"));
+      if (!Array.isArray(parsed)) return [];
+      return parsed
+        .filter((entry) => entry && Number.isFinite(entry.score) && entry.score > 0)
+        .map((entry) => ({
+          score: Math.max(0, Math.floor(entry.score)),
+          wave: Math.max(1, Math.floor(Number(entry.wave) || 1)),
+          skin: SKIN_MAP.has(entry.skin) ? entry.skin : DEFAULT_SKIN.id,
+          date: Number(entry.date) || Date.now(),
+        }))
+        .sort((a, b) => b.score - a.score || a.date - b.date)
+        .slice(0, MAX_LEADERS);
+    } catch {
+      return [];
     }
   }
 
@@ -359,6 +491,7 @@
     heartTimer: 13,
     bonusTimer: 10,
     soulsCaught: 0,
+    soulsEarned: 0,
     trapsDodged: 0,
     starTime: 0,
     brushTime: 0,
@@ -378,33 +511,54 @@
   let floats = [];
   let embers = [];
   let bgGrad = null;
-  let heroReady = false;
   let pointerDown = false;
   let overTimeout = null;
   let toastTimeout = null;
   let lastPaintedScore = -1;
   let profileReturnFocus = null;
+  let activeHubTab = "profile";
   let achQueue = [];
   let achToastTimer = null;
   let achToastBusy = false;
   let best = Math.max(0, Math.floor(Number(readStore(STORE_BEST, "0")) || 0));
   const unlockedAchievements = loadAchievements();
+  let souls = loadSouls();
+  const ownedSkins = loadOwnedSkins();
+  let selectedSkinId = readStore(STORE_SKIN, DEFAULT_SKIN.id);
+  if (!ownedSkins.has(selectedSkinId)) selectedSkinId = DEFAULT_SKIN.id;
+  let leaderboard = loadLeaderboard();
+  if (leaderboard.length > 0 && leaderboard[0].score > best) {
+    best = leaderboard[0].score;
+    writeStore(STORE_BEST, best);
+  }
 
   const keys = { left: false, right: false };
   const heartEls = [];
 
-  const heroImg = new Image();
-  heroImg.decoding = "async";
-  heroImg.addEventListener("load", () => {
-    heroReady = true;
+  const skinImages = new Map();
+  let heroImg = null;
+  let heroReady = false;
+
+  SKINS.forEach((skin) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.addEventListener("load", () => {
+      if (skin.id === selectedSkinId) {
+        heroReady = true;
+        if (view.width > 0) resize();
+      }
+    });
+    image.addEventListener("error", () => {
+      if (skin.id === selectedSkinId) {
+        heroReady = false;
+        if (selectedSkinId !== DEFAULT_SKIN.id) applySkin(DEFAULT_SKIN.id);
+      }
+    });
+    image.src = skin.file;
+    skinImages.set(skin.id, image);
   });
-  heroImg.addEventListener("error", () => {
-    heroReady = false;
-  });
-  heroImg.src = "assets/hero.png";
-  if (heroImg.complete && heroImg.naturalWidth > 0) {
-    heroReady = true;
-  }
+  heroImg = skinImages.get(selectedSkinId);
+  if (heroImg?.complete && heroImg.naturalWidth > 0) heroReady = true;
 
   function createSprite(rows, palette, scale = 3) {
     const width = rows[0].length;
@@ -652,6 +806,7 @@
   function updateBestLabels() {
     bestStartEl.textContent = formatScore(best);
     bestOverEl.textContent = formatScore(best);
+    hubBest.textContent = formatScore(best);
   }
 
   function updateAchCounters() {
@@ -729,14 +884,228 @@
     if (state.score >= 1500) unlockAchievement("score1500");
   }
 
-  function openProfile() {
+  function saveSouls() {
+    writeStore(STORE_SOULS, souls);
+  }
+
+  function saveSkins() {
+    writeStore(STORE_SKINS, JSON.stringify([...ownedSkins]));
+  }
+
+  function updateSoulDisplays() {
+    hubSouls.textContent = formatScore(souls);
+    shopSouls.textContent = formatScore(souls);
+    hubBest.textContent = formatScore(best);
+  }
+
+  function updateTagline() {
+    const skin = SKIN_MAP.get(selectedSkinId) || DEFAULT_SKIN;
+    taglineNameEl.textContent = skin.name;
+    taglineRoleEl.textContent = skin.tag;
+  }
+
+  function applySkin(id, { silent = false } = {}) {
+    const skin = SKIN_MAP.get(id);
+    if (!skin || !ownedSkins.has(id)) return false;
+    selectedSkinId = id;
+    writeStore(STORE_SKIN, id);
+    updateTagline();
+    heroImg = skinImages.get(id);
+    heroReady = Boolean(heroImg?.complete && heroImg.naturalWidth > 0);
+    resize();
+    if (!silent) {
+      renderShop();
+      showToast("СКИН", skin.name);
+      sfx.click();
+    }
+    return true;
+  }
+
+  function buySkin(id) {
+    const skin = SKIN_MAP.get(id);
+    if (!skin || ownedSkins.has(id)) return;
+    if (souls < skin.price) {
+      showToast("НЕ ХВАТАЕТ ДУШ", `нужно ещё ${skin.price - souls}`);
+      sfx.click();
+      return;
+    }
+    souls -= skin.price;
+    ownedSkins.add(id);
+    saveSouls();
+    saveSkins();
+    applySkin(id, { silent: true });
+    updateSoulDisplays();
+    renderShop();
+    showToast("СКИН ОТКРЫТ", skin.name);
+    sfx.achievement();
+  }
+
+  function renderShop() {
+    updateSoulDisplays();
+    const fragment = document.createDocumentFragment();
+
+    SKINS.forEach((skin) => {
+      const owned = ownedSkins.has(skin.id);
+      const selected = selectedSkinId === skin.id;
+      const affordable = souls >= skin.price;
+      const card = document.createElement("article");
+      card.className = `skin-card${selected ? " is-selected" : ""}${owned ? " is-owned" : ""}`;
+
+      const preview = document.createElement("div");
+      preview.className = "skin-preview";
+      const image = document.createElement("img");
+      image.src = skin.file;
+      image.alt = `${skin.name} — скин Виджи`;
+      image.loading = "lazy";
+      preview.append(image);
+
+      const copy = document.createElement("div");
+      copy.className = "skin-copy";
+
+      const nameRow = document.createElement("div");
+      nameRow.className = "skin-name-row";
+      const name = document.createElement("span");
+      name.className = "skin-name";
+      name.textContent = skin.name;
+      const price = document.createElement("span");
+      price.className = "skin-price";
+      price.textContent = skin.price === 0 ? "бесплатно" : `${skin.price} душ`;
+      nameRow.append(name, price);
+
+      const tag = document.createElement("p");
+      tag.className = "skin-tag";
+      tag.textContent = skin.tag;
+
+      const lore = document.createElement("p");
+      lore.className = "skin-lore";
+      lore.textContent = skin.lore;
+
+      const footer = document.createElement("div");
+      footer.className = "skin-footer";
+      const link = document.createElement("a");
+      link.className = "skin-link";
+      link.href = skin.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = skin.linkLabel;
+      const action = document.createElement("button");
+      action.type = "button";
+      action.dataset.skin = skin.id;
+      action.className = "skin-action";
+
+      if (selected) {
+        action.textContent = "выбрано";
+        action.classList.add("is-selected");
+        action.disabled = true;
+      } else if (owned) {
+        action.textContent = "выбрать";
+        action.classList.add("is-select");
+      } else if (affordable) {
+        action.textContent = `купить · ${skin.price}`;
+      } else {
+        action.textContent = `нужно ${skin.price}`;
+        action.classList.add("is-insufficient");
+      }
+
+      footer.append(link, action);
+      copy.append(nameRow, tag, lore, footer);
+      card.append(preview, copy);
+      fragment.append(card);
+    });
+
+    skinGrid.replaceChildren(fragment);
+  }
+
+  function renderLeaderboard() {
+    leaderCount.textContent = `${leaderboard.length} / ${MAX_LEADERS}`;
+    const fragment = document.createDocumentFragment();
+
+    if (leaderboard.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "leader-empty";
+      empty.textContent = "Пока пусто. Сыграйте первый забег — и он появится здесь.";
+      fragment.append(empty);
+    } else {
+      leaderboard.forEach((entry, index) => {
+        const row = document.createElement("li");
+        row.className = "leader-row";
+
+        const rank = document.createElement("span");
+        rank.className = "leader-rank";
+        rank.textContent = String(index + 1).padStart(2, "0");
+
+        const main = document.createElement("div");
+        main.className = "leader-main";
+        const name = document.createElement("b");
+        name.textContent = SKIN_MAP.get(entry.skin)?.name || DEFAULT_SKIN.name;
+        const meta = document.createElement("span");
+        const date = new Date(entry.date).toLocaleDateString("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+        });
+        meta.textContent = `волна ${entry.wave} · ${date}`;
+        main.append(name, meta);
+
+        const score = document.createElement("div");
+        score.className = "leader-score";
+        score.textContent = formatScore(entry.score);
+        const label = document.createElement("small");
+        label.textContent = "очков";
+        score.append(label);
+
+        row.append(rank, main, score);
+        fragment.append(row);
+      });
+    }
+
+    leaderList.replaceChildren(fragment);
+  }
+
+  function addLeaderboardEntry() {
+    if (state.score <= 0) return;
+    const entry = {
+      score: state.score,
+      wave: state.wave,
+      skin: selectedSkinId,
+      date: Date.now(),
+    };
+    leaderboard = [...leaderboard, entry]
+      .sort((a, b) => b.score - a.score || a.date - b.date)
+      .slice(0, MAX_LEADERS);
+    writeStore(STORE_LEADERBOARD, JSON.stringify(leaderboard));
+  }
+
+  function setHubTab(tab) {
+    const nextTab = ["profile", "shop", "leaders"].includes(tab) ? tab : "profile";
+    activeHubTab = nextTab;
+    hubProfile.hidden = nextTab !== "profile";
+    hubShop.hidden = nextTab !== "shop";
+    hubLeaders.hidden = nextTab !== "leaders";
+    document.querySelectorAll(".hub-tab").forEach((button) => {
+      const active = button.dataset.tab === nextTab;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    if (nextTab === "profile") renderAchievements();
+    if (nextTab === "shop") renderShop();
+    if (nextTab === "leaders") renderLeaderboard();
+    if (profilePanel) profilePanel.scrollTop = 0;
+  }
+
+  function openHub(tab = "profile") {
     if (mode === "playing" || mode === "paused") return;
     hideAchievementToast();
     profileReturnFocus = document.activeElement;
-    renderAchievements();
+    updateSoulDisplays();
+    updateBestLabels();
+    setHubTab(tab);
     profileScreen.hidden = false;
     profileBtn.setAttribute("aria-expanded", "true");
     profileClose.focus({ preventScroll: true });
+  }
+
+  function openProfile() {
+    openHub("profile");
   }
 
   function closeProfile() {
@@ -810,8 +1179,14 @@
         view.height * 0.36,
       ),
     );
-    view.heroW = view.heroH * (84 / 128);
+    view.heroH *= SKIN_MAP.get(selectedSkinId)?.scale || 1;
     view.baseY = view.height - Math.max(16, view.height * 0.034);
+    const selectedImage = skinImages.get(selectedSkinId);
+    const heroAspect =
+      selectedImage?.naturalWidth && selectedImage?.naturalHeight
+        ? selectedImage.naturalWidth / selectedImage.naturalHeight
+        : 84 / 128;
+    view.heroW = view.heroH * heroAspect;
 
     canvas.width = Math.round(view.width * view.dpr);
     canvas.height = Math.round(view.height * view.dpr);
@@ -864,6 +1239,7 @@
     state.heartTimer = 13;
     state.bonusTimer = 8;
     state.soulsCaught = 0;
+    state.soulsEarned = 0;
     state.trapsDodged = 0;
     state.starTime = 0;
     state.brushTime = 0;
@@ -908,6 +1284,8 @@
     if (mode !== "playing") return;
     mode = "over";
     hideAchievementToast();
+    window.clearTimeout(toastTimeout);
+    toastEl.classList.remove("is-visible");
     const previousBest = best;
     if (state.score > best) {
       best = state.score;
@@ -918,7 +1296,11 @@
     finalScoreEl.textContent = formatScore(state.score);
     bestOverEl.textContent = formatScore(best);
     newRecordEl.hidden = !isRecord;
+    runSouls.textContent = `+${state.soulsEarned}`;
+    totalSouls.textContent = formatScore(souls);
+    addLeaderboardEntry();
     updateBestLabels();
+    updateSoulDisplays();
 
     gameEl.classList.remove("is-playing", "is-menu");
     gameEl.classList.add("is-over");
@@ -975,6 +1357,7 @@
     state.falseHeartTime = 0;
     state.trapsDodged = 0;
     state.soulsCaught = 0;
+    state.soulsEarned = 0;
     items = [];
     particles = [];
     rings = [];
@@ -1141,6 +1524,10 @@
       const starBoost = state.starTime > 0 ? 2 : 1;
       const gain = 10 * mult * starBoost;
       state.score += gain;
+      souls += 1;
+      state.soulsEarned += 1;
+      saveSouls();
+      updateSoulDisplays();
       paintCombo();
       paintScore();
       burst(item.x, item.y, ["#baffff", "#36e2ff", "#0f9fc1", "#ffffff"], 11, 1);
@@ -2061,6 +2448,27 @@
       if (event.target === profileScreen) closeProfile();
     });
 
+    document.querySelectorAll(".hub-tab").forEach((button) => {
+      button.addEventListener("click", () => setHubTab(button.dataset.tab));
+    });
+
+    quickShopBtn.addEventListener("click", () => openHub("shop"));
+    quickLeadersBtn.addEventListener("click", () => openHub("leaders"));
+    overShopBtn.addEventListener("click", () => openHub("shop"));
+    overLeadersBtn.addEventListener("click", () => openHub("leaders"));
+
+    skinGrid.addEventListener("click", (event) => {
+      const action = event.target.closest(".skin-action");
+      if (!action || action.disabled) return;
+      const skin = SKIN_MAP.get(action.dataset.skin);
+      if (!skin) return;
+      if (ownedSkins.has(skin.id)) {
+        applySkin(skin.id);
+      } else {
+        buySkin(skin.id);
+      }
+    });
+
     soundBtn.addEventListener("click", () => {
       sfx.unlock();
       sfx.enabled = !sfx.enabled;
@@ -2128,6 +2536,8 @@
     buildLives();
     updateBestLabels();
     updateAchCounters();
+    updateSoulDisplays();
+    updateTagline();
     setSoundUi();
     gameEl.classList.add("is-menu");
     bind();
